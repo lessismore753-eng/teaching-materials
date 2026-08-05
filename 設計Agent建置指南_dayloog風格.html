@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="light" data-fontsize="m">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>設計 Agent 建置指南 — UED</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Noto+Serif+TC:wght@300;400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* light (default, like dayloog) */
+    --paper:#f3f1ec;
+    --paper-2:#eae7df;
+    --ink:#17150f;
+    --ink-soft:#5c584d;
+    --ink-faint:#928c7e;
+    --line:#d8d3c8;
+    --line-soft:#e2ddd3;
+    --hover:#e8e4da;
+    --gen:#3f7d6e;    /* muted teal */
+    --eval:#a9772a;   /* muted ochre */
+    --fix:#5560a8;    /* muted indigo */
+    --accent:#b64926; /* restrained clay — used almost nowhere */
+    --fs:0;           /* font-size diff, px, injected by buttons */
+  }
+  html[data-theme="dark"]{
+    --paper:#14130f;
+    --paper-2:#1c1a15;
+    --ink:#efece3;
+    --ink-soft:#a8a396;
+    --ink-faint:#6f6a5d;
+    --line:#33302a;
+    --line-soft:#26241f;
+    --hover:#211f19;
+    --gen:#6cc3ae;
+    --eval:#d8a44e;
+    --fix:#8f9be0;
+    --accent:#e07a4f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Noto Sans TC",system-ui,sans-serif;
+    font-weight:400;
+    line-height:1.85;
+    -webkit-font-smoothing:antialiased;
+    font-size:calc(16px + var(--fs) * 1px);
+    transition:background .5s ease,color .5s ease;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--ink);color:var(--paper)}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:"Space Mono",monospace}
+  .serif{font-family:"Fraunces","Noto Serif TC",serif}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 40px;position:relative}
+
+  /* ---------------- header ---------------- */
+  .top{
+    position:fixed;top:0;left:0;right:0;z-index:60;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:24px 40px;mix-blend-mode:normal;
+    pointer-events:none;
+  }
+  .top > *{pointer-events:auto}
+  .top .site{
+    font-family:"Space Mono",monospace;font-size:13px;letter-spacing:.02em;
+    display:flex;align-items:center;gap:10px;cursor:pointer;
+  }
+  .top .site .dot{width:8px;height:8px;background:var(--accent);border-radius:50%;display:inline-block}
+  .top .site b{font-weight:700}
+  .top .site span{color:var(--ink-faint)}
+
+  /* nav (right) */
+  .topnav{display:flex;gap:2px;align-items:center;font-family:"Space Mono",monospace;font-size:12.5px}
+  .topnav a{
+    padding:6px 13px;color:var(--ink-soft);transition:.2s;position:relative;
+  }
+  .topnav a:hover{color:var(--ink)}
+  .topnav a.active{color:var(--ink)}
+  .topnav a.active::after{
+    content:"";position:absolute;left:13px;right:13px;bottom:2px;height:1px;background:var(--accent);
+  }
+  .topnav .div{width:1px;height:16px;background:var(--line);margin:0 8px}
+
+  /* controls: theme + fontsize */
+  .ctrl{display:flex;gap:4px;align-items:center}
+  .ctrl button{
+    font-family:"Space Mono",monospace;font-size:11px;
+    background:none;border:1px solid var(--line);color:var(--ink-soft);
+    width:26px;height:26px;cursor:pointer;transition:.18s;display:grid;place-items:center;padding:0;
+  }
+  .ctrl button:hover{border-color:var(--ink-faint);color:var(--ink)}
+  .ctrl button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .ctrl .grp{display:flex;border:1px solid var(--line)}
+  .ctrl .grp button{border:none;border-right:1px solid var(--line)}
+  .ctrl .grp button:last-child{border-right:none}
+
+  .menu-toggle{display:none}
+
+  /* ---------------- page routing ---------------- */
+  .page{display:none}
+  .page.on{display:block;animation:rise .55s cubic-bezier(.2,.7,.2,1)}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  /* ---------------- hero (signature: giant display) ---------------- */
+  .hero{padding:150px 0 40px}
+  .hero .kick{
+    font-family:"Space Mono",monospace;font-size:12.5px;letter-spacing:.16em;
+    color:var(--ink-faint);text-transform:uppercase;margin-bottom:30px;
+    display:flex;align-items:center;gap:12px;
+  }
+  .hero .kick::before{content:"";width:30px;height:1px;background:var(--ink-faint)}
+  .giant{
+    font-family:"Fraunces","Noto Serif TC",serif;font-weight:400;
+    font-size:clamp(44px,8.5vw,118px);line-height:1.0;letter-spacing:-.025em;
+    margin:0 0 8px -.02em;
+  }
+  .giant .l2{display:block;font-weight:400}
+  .hero .say{
+    max-width:600px;margin:48px 0 0;font-size:calc(19px + var(--fs)*1px);
+    line-height:1.75;color:var(--ink-soft);font-weight:400;
+  }
+  .hero .say b{color:var(--ink);font-weight:500}
+  .hero .meta{
+    margin-top:44px;display:flex;gap:40px;flex-wrap:wrap;
+    font-family:"Space Mono",monospace;font-size:12.5px;color:var(--ink-faint);
+  }
+  .hero .meta div span{color:var(--ink);display:block;margin-top:3px}
+
+  /* ---------------- section frame ---------------- */
+  section{padding:64px 0}
+  .rule{height:1px;background:var(--line);margin:0}
+  .lbl{
+    font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-faint);margin-bottom:34px;
+  }
+  h2.big{font-family:"Fraunces","Noto Serif TC",serif;font-weight:400;font-size:clamp(30px,5vw,54px);line-height:1.12;letter-spacing:-.02em}
+  .measure{max-width:720px}
+  p{font-size:calc(16.5px + var(--fs)*1px);color:var(--ink-soft);font-weight:400}
+  p strong,strong{color:var(--ink);font-weight:600}
+  .body-lg p{font-size:calc(18px + var(--fs)*1px);line-height:1.8;margin-bottom:22px}
+
+  ul.clean{list-style:none;margin:22px 0}
+  ul.clean li{position:relative;padding-left:30px;margin-bottom:14px;color:var(--ink-soft);font-weight:400;font-size:calc(16.5px + var(--fs)*1px)}
+  ul.clean li::before{content:"—";position:absolute;left:0;color:var(--accent)}
+
+  /* ---------------- index list (dayloog signature list) ---------------- */
+  .index{margin-top:20px;border-top:1px solid var(--line)}
+  .index a{
+    display:grid;grid-template-columns:80px 1fr auto;gap:30px;align-items:baseline;
+    padding:34px 8px;border-bottom:1px solid var(--line);
+    transition:padding .35s cubic-bezier(.2,.7,.2,1),background .3s;
+  }
+  .index a:hover{padding-left:26px;padding-right:26px;background:var(--hover)}
+  .index a .no{font-family:"Space Mono",monospace;font-size:13px;color:var(--ink-faint)}
+  .index a .ti{font-family:"Fraunces","Noto Serif TC",serif;font-weight:400;font-size:clamp(24px,3.6vw,40px);line-height:1.1;letter-spacing:-.01em;color:var(--ink)}
+  .index a .ti .sub{display:block;font-family:"Noto Sans TC";font-weight:400;font-size:calc(15px + var(--fs)*1px);color:var(--ink-soft);margin-top:10px;letter-spacing:0;line-height:1.6;max-width:560px}
+  .index a .go{font-family:"Space Mono",monospace;font-size:20px;color:var(--ink-faint);transition:.3s;justify-self:end}
+  .index a:hover .go{color:var(--accent);transform:translateX(6px)}
+  .index a .tag{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+  .index a.g .tag{color:var(--gen)} .index a.e .tag{color:var(--eval)} .index a.f .tag{color:var(--fix)} .index a.p .tag{color:var(--accent)}
+
+  /* ---------------- pipeline (kept, restyled minimal) ---------------- */
+  .pipe{margin:56px 0 10px;display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:0;align-items:stretch}
+  .pipe .st{padding:30px 26px;border:1px solid var(--line);background:var(--paper-2)}
+  .pipe .st .t{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+  .pipe .st .n{font-family:"Fraunces","Noto Serif TC",serif;font-size:27px;font-weight:400;margin-bottom:8px}
+  .pipe .st .d{font-size:calc(13.5px + var(--fs)*1px);color:var(--ink-soft);font-weight:400;line-height:1.55}
+  .pipe .st.g{border-top:2px solid var(--gen)} .pipe .st.g .n{color:var(--gen)}
+  .pipe .st.e{border-top:2px solid var(--eval)} .pipe .st.e .n{color:var(--eval)}
+  .pipe .st.f{border-top:2px solid var(--fix)} .pipe .st.f .n{color:var(--fix)}
+  .pipe .ar{display:flex;align-items:center;justify-content:center;padding:0 16px;font-family:"Space Mono",monospace;color:var(--ink-faint);font-size:18px}
+  .loopnote{
+    margin-top:16px;font-family:"Space Mono",monospace;font-size:calc(12.5px + var(--fs)*1px);
+    color:var(--ink-soft);padding:14px 20px;border:1px dashed var(--line);background:var(--paper-2);
+  }
+  .loopnote b{color:var(--eval);font-weight:700}
+
+  /* ---------------- tool-agnostic note ---------------- */
+  .tool{border:1px solid var(--line);padding:32px 34px;margin:8px 0;background:var(--paper-2)}
+  .tool .h{font-family:"Space Mono",monospace;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:16px}
+  .tool p{font-size:calc(16.5px + var(--fs)*1px)}
+  .tool p + p{margin-top:12px;font-size:calc(15px + var(--fs)*1px);color:var(--ink-faint)}
+  .tool b{font-family:"Space Mono",monospace;font-weight:700;font-size:calc(14px + var(--fs)*1px);padding:1px 8px;border:1px solid var(--line)}
+  .tool .cc{color:var(--gen)} .tool .fg{color:var(--fix)} .tool .cx{color:var(--eval)}
+
+  /* ---------------- principles (numbered typographic list) ---------------- */
+  .prins{margin-top:10px}
+  .prin{display:grid;grid-template-columns:90px 1fr;gap:36px;padding:40px 0;border-top:1px solid var(--line)}
+  .prin:last-child{border-bottom:1px solid var(--line)}
+  .prin .pn{font-family:"Fraunces",serif;font-weight:300;font-size:52px;line-height:1;color:var(--line);font-style:italic}
+  .prin h3{font-family:"Fraunces","Noto Serif TC",serif;font-weight:500;font-size:calc(23px + var(--fs)*1px);line-height:1.3;margin-bottom:14px;color:var(--ink)}
+  .prin p{font-size:calc(16px + var(--fs)*1px)}
+  .prin .note{margin-top:16px;padding-left:20px;border-left:2px solid var(--accent);color:var(--ink-soft);font-size:calc(14.5px + var(--fs)*1px)}
+  .prin .note b{color:var(--ink);font-weight:600}
+  .prin .do{margin-top:14px;font-size:calc(15px + var(--fs)*1px);color:var(--ink)}
+  .prin .do .tg{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.08em;color:var(--gen);text-transform:uppercase;margin-right:10px}
+  .prin .do code{font-family:"Space Mono",monospace;font-size:calc(12.5px + var(--fs)*1px);color:var(--ink);background:var(--paper-2);padding:1px 6px;border:1px solid var(--line)}
+
+  /* ---------------- agent page banner ---------------- */
+  .aban{padding:150px 0 20px}
+  .aban .code{font-family:"Space Mono",monospace;font-size:13px;letter-spacing:.16em;margin-bottom:24px}
+  .aban h1{font-family:"Fraunces","Noto Serif TC",serif;font-weight:300;font-size:clamp(52px,11vw,140px);line-height:.92;letter-spacing:-.03em}
+  .aban .role{max-width:620px;margin-top:34px;font-size:calc(18px + var(--fs)*1px);color:var(--ink-soft);font-weight:400;line-height:1.75}
+  .aban.g .code,.aban.g h1{color:var(--gen)}
+  .aban.e .code,.aban.e h1{color:var(--eval)}
+  .aban.f .code,.aban.f h1{color:var(--fix)}
+
+  .stations{display:grid;grid-template-columns:1fr 1fr 1fr;margin:44px 0 0;border:1px solid var(--line)}
+  .stations a{padding:16px 14px;text-align:center;font-family:"Space Mono",monospace;font-size:12px;color:var(--ink-faint);border-right:1px solid var(--line);transition:.2s;letter-spacing:.03em}
+  .stations a:last-child{border-right:none}
+  .stations a:hover{color:var(--ink);background:var(--hover)}
+  .stations a.hg{background:var(--gen);color:#fff}
+  .stations a.he{background:var(--eval);color:#fff}
+  .stations a.hf{background:var(--fix);color:#fff}
+  html[data-theme="dark"] .stations a.hg,html[data-theme="dark"] .stations a.he,html[data-theme="dark"] .stations a.hf{color:var(--paper)}
+
+  /* io */
+  .io{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:40px 0;border:1px solid var(--line)}
+  .io > div{padding:26px 28px}
+  .io > div:first-child{border-right:1px solid var(--line)}
+  .io .k{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+  .io .v{font-size:calc(15.5px + var(--fs)*1px);color:var(--ink);font-weight:400}
+  .io .v code{font-family:"Space Mono",monospace;font-size:calc(13px + var(--fs)*1px);color:var(--accent);font-weight:700}
+
+  /* steps as typographic list */
+  .flow{margin-top:8px}
+  .fstep{display:grid;grid-template-columns:70px 1fr;gap:30px;padding:32px 0;border-top:1px solid var(--line);align-items:start}
+  .fstep:last-child{border-bottom:1px solid var(--line)}
+  .fstep .sn{font-family:"Space Mono",monospace;font-size:14px;color:var(--ink-faint);padding-top:6px}
+  .fstep h3{font-family:"Fraunces","Noto Serif TC",serif;font-weight:500;font-size:calc(20px + var(--fs)*1px);margin-bottom:9px;line-height:1.35}
+  .fstep p{font-size:calc(15.5px + var(--fs)*1px)}
+  .fstep p code{font-family:"Space Mono",monospace;font-size:calc(13px + var(--fs)*1px);color:var(--ink)}
+  .fstep .tt{display:inline-block;margin-top:12px;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.06em;color:var(--ink-faint);padding:3px 10px;border:1px solid var(--line)}
+
+  /* callout */
+  .call{border-left:2px solid var(--accent);padding:8px 0 8px 26px;margin:36px 0}
+  .call .t{font-family:"Space Mono",monospace;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+  .call p{font-size:calc(16px + var(--fs)*1px);color:var(--ink)}
+
+  /* checklist */
+  .check{margin:32px 0;border:1px solid var(--line)}
+  .check .h{padding:15px 22px;border-bottom:1px solid var(--line);font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.1em;color:var(--eval);text-transform:uppercase}
+  .check .ci{display:flex;gap:16px;padding:16px 22px;border-bottom:1px solid var(--line-soft);align-items:center}
+  .check .ci:last-child{border-bottom:none}
+  .check .bx{width:15px;height:15px;border:1.5px solid var(--eval);flex-shrink:0}
+  .check .ci code{font-family:"Space Mono",monospace;font-size:calc(12px + var(--fs)*1px);color:var(--ink-faint);width:120px;flex-shrink:0}
+  .check .ci span{font-size:calc(14.5px + var(--fs)*1px);color:var(--ink);font-weight:400}
+
+  /* two-up */
+  .twoup{display:grid;grid-template-columns:1fr 1fr;gap:56px}
+
+  /* footer / pager */
+  footer.foot{border-top:1px solid var(--line);margin-top:60px;padding:44px 0 60px}
+  .foot .in{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
+  .foot .in small{font-family:"Space Mono",monospace;font-size:12px;color:var(--ink-faint)}
+  .pager{display:flex;gap:8px}
+  .pager a{font-family:"Space Mono",monospace;font-size:12.5px;color:var(--ink-soft);padding:11px 20px;border:1px solid var(--line);transition:.2s}
+  .pager a:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+  /* mobile menu panel */
+  .mpanel{position:fixed;inset:0;z-index:55;background:var(--paper);display:none;flex-direction:column;justify-content:center;padding:40px;gap:6px}
+  .mpanel.open{display:flex}
+  .mpanel a{font-family:"Fraunces","Noto Serif TC",serif;font-size:34px;font-weight:400;color:var(--ink);padding:12px 0;border-bottom:1px solid var(--line)}
+  .mpanel a .en{font-family:"Space Mono",monospace;font-size:13px;color:var(--ink-faint);display:block}
+
+  @media(max-width:900px){
+    .wrap{padding:0 24px}
+    .top{padding:18px 24px}
+    .topnav{display:none}
+    .menu-toggle{display:grid;place-items:center;font-family:"Space Mono",monospace;font-size:12px;background:none;border:1px solid var(--line);color:var(--ink);height:26px;padding:0 12px;cursor:pointer}
+    .pipe{grid-template-columns:1fr}
+    .pipe .ar{transform:rotate(90deg);padding:10px 0}
+    .io,.twoup{grid-template-columns:1fr}
+    .io > div:first-child{border-right:none;border-bottom:1px solid var(--line)}
+    .index a{grid-template-columns:50px 1fr auto;gap:16px}
+    .stations{grid-template-columns:1fr}
+    .stations a{border-right:none;border-bottom:1px solid var(--line)}
+    .prin{grid-template-columns:1fr;gap:12px}
+    .prin .pn{font-size:38px}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:background .3s,color .3s!important}}
+</style>
+</head>
+<body>
+
+<!-- header -->
+<div class="top">
+  <div class="site" onclick="go('home')"><span class="dot"></span><b>UED-AI</b> <span>/ agent build</span></div>
+  <nav class="topnav">
+    <a data-nav="home" onclick="go('home')">Index</a>
+    <a data-nav="principle" onclick="go('principle')">Principles</a>
+    <a data-nav="design" onclick="go('design')">Design</a>
+    <a data-nav="eval" onclick="go('eval')">Evaluation</a>
+    <a data-nav="fix" onclick="go('fix')">Fix</a>
+    <span class="div"></span>
+    <span class="ctrl">
+      <span class="grp" title="字級">
+        <button onclick="setFS(-3)" id="fs-s">S</button>
+        <button onclick="setFS(0)" id="fs-m" class="on">M</button>
+        <button onclick="setFS(4)" id="fs-l">L</button>
+      </span>
+      <button onclick="toggleTheme()" id="themebtn" title="亮 / 暗">☾</button>
+    </span>
+  </nav>
+  <button class="menu-toggle" onclick="toggleMenu()">MENU</button>
+</div>
+
+<div class="mpanel" id="mpanel">
+  <a onclick="go('home')">Index<span class="en">總覽</span></a>
+  <a onclick="go('principle')">Principles<span class="en">建置原理</span></a>
+  <a onclick="go('design')">Design Agent<span class="en">生成</span></a>
+  <a onclick="go('eval')">Evaluation Agent<span class="en">檢查</span></a>
+  <a onclick="go('fix')">Fix Agent<span class="en">修正</span></a>
+  <div class="ctrl" style="margin-top:30px">
+    <span class="grp"><button onclick="setFS(-3)">S</button><button onclick="setFS(0)" class="on">M</button><button onclick="setFS(4)">L</button></span>
+    <button onclick="toggleTheme()">☾</button>
+  </div>
+</div>
+
+<main>
+
+<!-- ============ HOME ============ -->
+<div class="page on" id="page-home">
+  <div class="wrap">
+    <div class="hero">
+      <div class="kick">Design System · Agent Pipeline</div>
+      <h1 class="giant">讓 AI 自己<span class="l2">生成 · 檢查 · 修正</span></h1>
+      <p class="say">元件規範已經寫得很清楚了 —— 但清楚的規範，只有在<b>被確實執行</b>時才有價值。這份指南帶你建置一組互相接力的 AI Agent，把規範從一份文件，變成一條會自我把關的產線。</p>
+      <div class="meta">
+        <div>對象<span>UED 設計師</span></div>
+        <div>工具<span>AI + Notion MCP + Figma MCP</span></div>
+        <div>產出<span>三個可交接的 Agent</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="pipe">
+      <div class="st g"><div class="t">Agent 01</div><div class="n">Design</div><div class="d">依規範產出設計稿，回報用了哪些元件</div></div>
+      <div class="ar">→</div>
+      <div class="st e"><div class="t">Agent 02</div><div class="n">Evaluation</div><div class="d">逐條比對規範，產出 pass / fail 清單</div></div>
+      <div class="ar">→</div>
+      <div class="st f"><div class="t">Agent 03</div><div class="n">Fix</div><div class="d">針對每一條 fail，依規則修正</div></div>
+    </div>
+    <div class="loopnote">↺ 迴圈：Fix 修完後交還 <b>Evaluation</b> 再檢查一次，直到通過或達重試上限 → 轉人工</div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <div class="lbl">為什麼要做這件事</div>
+      <div class="measure body-lg">
+        <h2 class="big" style="margin-bottom:30px">規範不會自己被遵守</h2>
+        <p>我們花了很多力氣把元件規範整理出來 —— 色票、尺寸 token、禁用規則、決策邏輯，全都寫進了 MD 與 JSON。但在真實的專案裡，規範被翻開的次數，遠少於它被略過的次數。設計稿趕、規範厚，人總會憑手感做完再說。</p>
+        <p>而市面上大多數 AI 設計教學，也只停在第一步：給一段 prompt、生一張圖、好看就收 —— 那只是整條產線的<strong>半套</strong>。因為單一 Agent 有三個先天問題：</p>
+        <ul class="clean">
+          <li>沒有把關者，錯了不會有人發現</li>
+          <li>「看起來對」不等於「符合規範」—— 手感無法稽核</li>
+          <li>沒有明確的交接規格，環節之間串不起來</li>
+        </ul>
+        <p>與此同時，整個金控正在盤點各團隊如何把 AI 融入設計流程。<strong>能不能證明我們的規範是「被系統化執行」的，而不只是「被寫下來」的</strong>，會直接決定 UED 在這波盤點裡站在什麼位置。</p>
+        <p>所以我們要建的，不是一個會畫圖的 AI，而是一條<strong>能互相交接、能被稽核、跑不過會停下來轉人工</strong>的產線 —— 規範不再是靜態文件，而是會自動產出、自動比對、自動修正的基礎建設。這是我們手上真正跟別人不一樣的東西。</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:20px">
+    <div class="wrap">
+      <div class="lbl">目錄 · Contents</div>
+      <div class="index">
+        <a class="p" onclick="go('principle')"><span class="no">00</span><span class="ti">建置原理<span class="sub">三個 Agent 為什麼要隔離、判準為什麼要可勾選、迴圈為什麼要有上限。動手前必讀。</span></span><span class="go">→</span></a>
+        <a class="g" onclick="go('design')"><span class="no">01</span><span class="ti">Design Agent<span class="sub">從 Figma 抽規格、建 Notion 資料庫、產出設計與交接報告。</span></span><span class="go">→</span></a>
+        <a class="e" onclick="go('eval')"><span class="no">02</span><span class="ti">Evaluation Agent<span class="sub">把規範結構化成可勾選 JSON，逐條比對，產出問題報告。</span></span><span class="go">→</span></a>
+        <a class="f" onclick="go('fix')"><span class="no">03</span><span class="ti">Fix Agent<span class="sub">吃問題報告當輸入，逐條修正，並管理重試與收斂。</span></span><span class="go">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot"><div class="wrap"><div class="in">
+    <small>UED-AI // 內部教學材料</small>
+    <div class="pager"><a onclick="go('principle')">下一頁 · 建置原理 →</a></div>
+  </div></div></footer>
+</div>
+
+<!-- ============ PRINCIPLE ============ -->
+<div class="page" id="page-principle">
+  <div class="wrap">
+    <div class="aban">
+      <div class="code mono" style="color:var(--accent)">// PRINCIPLES</div>
+      <h1>建置原理</h1>
+      <p class="role">在動手做任何一個 Agent 之前，先理解這四個原理 —— 它們會決定三個 Agent 串起來會順跑、還是會互相打架。</p>
+    </div>
+
+    <section style="padding-top:36px">
+      <div class="tool">
+        <div class="h">Tool-agnostic</div>
+        <p>先講一件重要的事：這套架構<strong>跟你用哪個工具無關</strong>。以 <b class="cc">Claude Code</b>、<b class="fg">Figma Agent</b>、<b class="cx">Codex</b> 這三個為主，都能實作出下面這組 agent —— 差別只在介面與串接方式，不在能不能做。</p>
+      </div>
+    </section>
+
+    <section style="padding-top:10px">
+      <div class="wrap" style="padding:0">
+        <div class="prins">
+          <div class="prin"><div class="pn serif">01</div><div>
+            <h3>檢查者，要跟生成者隔離</h3>
+            <p>Evaluation Agent 絕對不能看到 Design Agent 是「怎麼想的」。如果它讀得到生成時的推理過程，它會順著那套邏輯點頭 —— 生成者說「這裡留白是刻意的」，檢查者就會同意，於是審查失去意義。</p>
+            <p class="do"><span class="tg">怎麼做</span>把兩個 Agent 拆成獨立的 Skill / 對話，別讓它們共用同一段上下文。檢查者的輸入只餵兩樣：Design 的<strong>產出結果</strong>與 Notion 上的<strong>規範</strong> —— 生成時的推理過程一律不傳進去。</p>
+            <div class="note">真正的獨立，是這組架構的核心要求。檢查者只該拿到兩樣東西：產出結果，以及規範本身。中間的推理，不給。</div>
+          </div></div>
+          <div class="prin"><div class="pn serif">02</div><div>
+            <h3>檢查者的角色是「找碴」，不是「打分數」</h3>
+            <p>不要叫 Evaluation Agent 給設計稿打 85 分。分數是模糊的品質判斷，稽核時沒人知道那 15 分扣在哪。</p>
+            <p class="do"><span class="tg">怎麼做</span>在它的 prompt 裡直接下對抗式指令：「找出所有違反規範的地方，一條一條列出來」。輸出格式強制成「違反了哪條 rule ID＋在哪個 component」，而不是任何形式的總分或評語。</p>
+            <div class="note">框定成找碴，模型才會認真挑毛病；框定成評分，同一個模型往往會傾向給過。</div>
+          </div></div>
+          <div class="prin"><div class="pn serif">03</div><div>
+            <h3>判準要是「可勾選的清單」，不是「好不好看」</h3>
+            <p>不要用「整體感覺不夠精緻」這種模糊判斷。審查標準必須結構化成一條一條可以逐項核對的規則。</p>
+            <p class="do"><span class="tg">怎麼做</span>把規範拆成一條條有 ID 的規則寫進 JSON —— <code>R-COLOR-01：主色 hex 等於 token 值</code>、<code>R-SIZE-04：間距用 size token</code>。每條都能明確標 pass / fail，檢查時就是拿這份清單逐格打勾。</p>
+            <div class="note">可勾選的清單才有稽核軌跡。這也正好是我們把規範寫成 JSON 的理由：JSON 就是那份清單。</div>
+          </div></div>
+          <div class="prin"><div class="pn serif">04</div><div>
+            <h3>迴圈要有上限，跑不過就轉人工</h3>
+            <p>Evaluation → Fix → 再 Evaluation 是一個迴圈。沒有上限，它可能無限地修下去。重試上限的意義不是「湊到幾輪」，而是「什麼時候該讓人接手」。</p>
+            <p class="do"><span class="tg">怎麼做</span>在迴圈裡設一個計數上限（預設 3 輪）當停損。另外加一條收斂判斷：連續兩輪問題數沒下降就提前停。任一條件觸發，就把最後一份問題報告交給設計師人工處理。</p>
+            <div class="note">上限管的是交棒時機，不是完美程度。跑滿還沒過，就把最後一份問題報告交給設計師，而不是讓 Agent 繼續繞。</div>
+          </div></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap" style="padding:0">
+        <div class="lbl">承上 · 重試要跑幾輪</div>
+        <div class="twoup">
+          <div>
+            <h2 class="big" style="font-size:clamp(26px,3.6vw,38px);margin-bottom:22px">預設 3 輪，<br>由設計師依複雜度自訂</h2>
+            <p>沒有一個放諸四海皆準的輪數。簡單的頁面可能 1–2 輪就收斂，複雜的頁面可以往上調到 5 輪。所以把上限設計成<strong>可調</strong>的 —— 預設 3 輪當起點，設計師依頁面自己決定要不要加。但「可調」不等於「無限往上加」。調整的依據是收斂，不是完美。</p>
+          </div>
+          <div>
+            <div class="call"><div class="t">停損邏輯 A · 收斂判斷</div><p>連續兩輪抓到的問題數沒有下降（甚至變多），那不是輪數不夠，是 Fix 或規格本身有問題。這時該停，加再多輪也沒用。</p></div>
+            <div class="call"><div class="t">停損邏輯 B · 上限即轉人工</div><p>跑滿設定輪數還沒過，就把 Evaluation 最後一份報告交給人工處理，而不是取消上限讓 Agent 自己硬幹。</p></div>
+          </div>
+        </div>
+        <div class="call" style="margin-top:44px">
+          <div class="t">三個 Agent 共通的一件事</div>
+          <p>三份報告的欄位規格要能對接 —— 至少 component ID、rule ID、狀態要一致。Design 輸出「用了哪些元件」、Evaluation 輸出「逐條 pass/fail」、Fix 輸出「改了什麼」。用同一套 ID 系統，orchestration 才串得起來。這件事在每個 Agent 的「設定報告輸出方式」那一步都要遵守。</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot"><div class="wrap"><div class="in">
+      <small>PRINCIPLES</small>
+      <div class="pager"><a onclick="go('home')">← 總覽</a><a onclick="go('design')">01 · Design →</a></div>
+    </div></div></footer>
+  </div>
+</div>
+
+<!-- ============ DESIGN ============ -->
+<div class="page" id="page-design">
+  <div class="wrap">
+    <div class="aban g">
+      <div class="code mono">AGENT 01 / GENERATION</div>
+      <h1>Design</h1>
+      <p class="role">產線的起點。依照元件規範產出設計稿，並回報它用了哪些元件、套了哪些規則 —— 這份回報，就是後面兩個 Agent 的檢查對象。</p>
+      <div class="stations">
+        <a class="hg">01 · DESIGN</a><a onclick="go('eval')">02 · EVALUATION</a><a onclick="go('fix')">03 · FIX</a>
+      </div>
+    </div>
+
+    <section style="padding-top:20px">
+      <div class="io">
+        <div><div class="k">Input · 輸入</div><div class="v">設計需求 ＋ Notion 上的<code>元件規範</code>（色票 / size token / 禁用規則 / 決策邏輯）</div></div>
+        <div><div class="k">Output · 輸出</div><div class="v">Figma 設計稿 ＋ 一份<code>使用清單</code>：用了哪些 component ID、套了哪些 rule ID</div></div>
+      </div>
+
+      <div class="lbl" style="margin-top:20px">建置步驟</div>
+      <p class="measure" style="margin-bottom:10px">這個 Agent 的前幾步，同時也在建立後面兩個 Agent 共用的資料層（規範來源與 Notion 資料庫）。先把地基打好，再實作 Skill。</p>
+
+      <div class="flow">
+        <div class="fstep"><div class="sn">01</div><div><h3>用 Figma Skill 建立 Component 規格</h3><p>透過 Figma MCP，把元件的規格抽出來 —— 每個 component 的色票、尺寸、間距、狀態。這是整條產線的「事實基準」。</p><span class="tt">Figma MCP · component spec</span></div></div>
+        <div class="fstep"><div class="sn">02</div><div><h3>用 Skill 產出 Component 的 MD 檔案</h3><p>把規格轉成 MD。MD 負責人看得懂的語意與 edge case —— 為什麼這樣設計、什麼情況例外，這些是 JSON 表達不了的脈絡。</p><span class="tt">MD · 語意與 rationale</span></div></div>
+        <div class="fstep"><div class="sn">03</div><div><h3>人工審查 MD 檔案是否正確</h3><p>Agent 抽出來的規格不一定對。這一步由設計師親自核對，確認 MD 忠實反映真正的規範，才放行。這是唯一必須有人的環節。</p><span class="tt">Human review</span></div></div>
+        <div class="fstep"><div class="sn">04</div><div><h3>設定報告輸出方式</h3><p>定義 Design Agent 產出設計後，要附上什麼格式的「使用清單」。至少包含 component ID 與 rule ID —— 這是交給 Evaluation 的接口。</p><span class="tt">handoff · 共用 ID 規格</span></div></div>
+        <div class="fstep"><div class="sn">05</div><div><h3>建立 Notion 資料庫</h3><p>把規範放進 Notion，當作三個 Agent 共同讀取的儲存與協作層。Notion 對非技術設計師友善，也避開 GitHub 的公司審核門檻。三個 Agent 讀同一份，事實基準才一致。</p><span class="tt">Notion MCP · 共用資料層</span></div></div>
+        <div class="fstep"><div class="sn">06</div><div><h3>建立 Skill 並實作</h3><p>把上面這套流程寫成一個 Skill：讀 Notion 規範 → 產出設計 → 附上使用清單。實測產出是否穩定、清單格式是否正確。</p><span class="tt">Skill · 實作</span></div></div>
+      </div>
+
+      <div class="call">
+        <div class="t">交接提醒</div>
+        <p>Design Agent 的產物不只是「一張設計稿」。真正重要的是那份<strong>使用清單</strong> —— 它是 Evaluation Agent 唯一能拿到的、關於「這張稿子聲稱自己做了什麼」的資訊。清單寫得含糊，後面就無從查起。</p>
+      </div>
+    </section>
+
+    <footer class="foot"><div class="wrap"><div class="in">
+      <small>AGENT 01 // DESIGN</small>
+      <div class="pager"><a onclick="go('principle')">← 建置原理</a><a onclick="go('eval')">02 · Evaluation →</a></div>
+    </div></div></footer>
+  </div>
+</div>
+
+<!-- ============ EVAL ============ -->
+<div class="page" id="page-eval">
+  <div class="wrap">
+    <div class="aban e">
+      <div class="code mono">AGENT 02 / EVALUATION</div>
+      <h1>Evaluation</h1>
+      <p class="role">產線的把關者。它不管設計「好不好看」，只管「有沒有違反規範」。逐條比對，產出一份可勾選的 pass / fail 清單 —— 這份清單，就是 Fix Agent 的工作單。</p>
+      <div class="stations">
+        <a onclick="go('design')">01 · DESIGN</a><a class="he">02 · EVALUATION</a><a onclick="go('fix')">03 · FIX</a>
+      </div>
+    </div>
+
+    <section style="padding-top:20px">
+      <div class="io">
+        <div><div class="k">Input · 輸入</div><div class="v">Design 的<code>使用清單</code> ＋ Notion 上的規範（同一份，不另抽）</div></div>
+        <div><div class="k">Output · 輸出</div><div class="v">一份<code>逐條問題報告</code>：每條 rule 標記 pass / fail，fail 附上違反了什麼</div></div>
+      </div>
+
+      <div class="call">
+        <div class="t">關鍵原則 · 呼應建置原理 01 & 02</div>
+        <p>Evaluation Agent 只能拿到<strong>產出結果</strong>與<strong>規範</strong>兩樣東西 —— 絕不給它看 Design Agent 的推理過程，否則它會被帶著走。它的任務是對抗式找碴，不是打分數。</p>
+      </div>
+
+      <div class="lbl" style="margin-top:20px">建置步驟</div>
+      <div class="flow">
+        <div class="fstep"><div class="sn">01</div><div><h3>用 Figma Skill 建立 Component 規格</h3><p>取得要檢查的規格基準。注意：如果 Design Agent 已經抽過同一批 component，這裡<strong>讀 Notion 上那份就好，不要重抽</strong>。兩邊的事實基準必須是同一份，否則檢查會失準。</p><span class="tt">讀取 · 不重抽</span></div></div>
+        <div class="fstep"><div class="sn">02</div><div><h3>用 Skill 建立 JSON 檔案</h3><p>這一步不只是「產一個 JSON」，而是<strong>把審查標準結構化成 JSON</strong>：hex、size token、禁用規則，一條一條列成可以逐項核對的清單。這份 JSON 就是檢查者的判準。</p><span class="tt">JSON · 可勾選判準</span></div></div>
+        <div class="fstep"><div class="sn">03</div><div><h3>設定報告輸出方式</h3><p>定義問題報告的格式：每一條 rule ID 對應一個狀態（pass / fail），fail 要註明對象 component ID 與違反內容。這份報告是 Fix Agent 的直接輸入，欄位要對得上。</p><span class="tt">report · Fix 的工作單</span></div></div>
+        <div class="fstep"><div class="sn">04</div><div><h3>建立 Skill 並實作</h3><p>把流程寫成 Skill：讀使用清單 ＋ 讀 JSON 判準 → 逐條比對 → 輸出問題報告。實測它能不能穩定抓出真正的違規，而不是含糊帶過。</p><span class="tt">Skill · 實作</span></div></div>
+      </div>
+
+      <div class="lbl" style="margin-top:44px">判準清單長什麼樣（示意）</div>
+      <p class="measure" style="margin-bottom:6px">JSON 判準攤開來，大概就是這樣一份可以逐格打勾的東西。每一條都明確、可核對、有 ID：</p>
+      <div class="check">
+        <div class="h">Eval report · sample</div>
+        <div class="ci"><div class="bx"></div><code>R-COLOR-01</code><span>主色 hex 是否等於 token 定義值</span></div>
+        <div class="ci"><div class="bx"></div><code>R-SIZE-04</code><span>間距是否使用 size token，未寫死數值</span></div>
+        <div class="ci"><div class="bx"></div><code>R-BAN-02</code><span>是否踩到禁用規則（如禁用的圓角 / 陰影）</span></div>
+        <div class="ci"><div class="bx"></div><code>R-COMP-07</code><span>是否使用了規範外的自製元件</span></div>
+      </div>
+    </section>
+
+    <footer class="foot"><div class="wrap"><div class="in">
+      <small>AGENT 02 // EVALUATION</small>
+      <div class="pager"><a onclick="go('design')">← 01 · Design</a><a onclick="go('fix')">03 · Fix →</a></div>
+    </div></div></footer>
+  </div>
+</div>
+
+<!-- ============ FIX ============ -->
+<div class="page" id="page-fix">
+  <div class="wrap">
+    <div class="aban f">
+      <div class="code mono">AGENT 03 / FIX</div>
+      <h1>Fix</h1>
+      <p class="role">產線的收尾者。它不重新設計，只針對 Evaluation 報告裡的每一條 fail，依規則修正。修完交還 Evaluation 再檢查 —— 這個迴圈由它管理，包括什麼時候該停。</p>
+      <div class="stations">
+        <a onclick="go('design')">01 · DESIGN</a><a onclick="go('eval')">02 · EVALUATION</a><a class="hf">03 · FIX</a>
+      </div>
+    </div>
+
+    <section style="padding-top:20px">
+      <div class="io">
+        <div><div class="k">Input · 輸入</div><div class="v">Evaluation 的<code>問題報告</code> —— 這是 Fix 的工作來源，沒有它 Fix 不知道要修什麼</div></div>
+        <div><div class="k">Output · 輸出</div><div class="v">修正後的設計 ＋ 一份<code>變更報告</code>：改了哪些 component、對應哪些 rule ID</div></div>
+      </div>
+
+      <div class="call">
+        <div class="t">先接對輸入</div>
+        <p>Fix Agent 最容易被漏掉的一件事：<strong>它的輸入是 Evaluation 的問題報告</strong>。設定修復規則之前，要先確定它吃的是那份逐條報告，規則是「針對報告裡的每一條 fail，該怎麼修」。沒接上這條線，會做出一個不知道要修什麼的 Fix Agent。</p>
+      </div>
+
+      <div class="lbl" style="margin-top:20px">建置步驟</div>
+      <div class="flow">
+        <div class="fstep"><div class="sn">01</div><div><h3>設定修復規則</h3><p>定義「看到某一類 fail，該怎麼修」。以 rule ID 為單位：<code>R-COLOR-01 fail → 換回 token 定義的 hex</code>。同時在這裡寫入<strong>重試上限</strong>（預設 3 輪）與收斂停損：連續兩輪問題數沒下降就停、跑滿還沒過就轉人工。</p><span class="tt">rules · 含重試上限與收斂</span></div></div>
+        <div class="fstep"><div class="sn">02</div><div><h3>設定報告輸出方式</h3><p>定義變更報告格式：改了哪些 component ID、對應處理了哪些 rule ID、還有哪些沒能修好。欄位要能跟 Evaluation 對接，這樣下一輪檢查才知道要重驗哪幾條。</p><span class="tt">report · 回傳給 Evaluation</span></div></div>
+        <div class="fstep"><div class="sn">03</div><div><h3>建立 Skill 並實作</h3><p>把流程寫成 Skill：讀問題報告 → 逐條套修復規則 → 產出變更報告 → 交還 Evaluation。實測整個迴圈跑得動、會在該停的時候停、跑滿會轉人工。</p><span class="tt">Skill · 實作</span></div></div>
+      </div>
+
+      <div class="lbl" style="margin-top:44px">迴圈是怎麼收尾的</div>
+      <div class="pipe" style="margin-top:14px">
+        <div class="st f"><div class="t">Step</div><div class="n" style="font-size:22px">套修復規則</div><div class="d">依報告逐條修正</div></div>
+        <div class="ar">→</div>
+        <div class="st e"><div class="t">Step</div><div class="n" style="font-size:22px">交還檢查</div><div class="d">Evaluation 重驗</div></div>
+        <div class="ar">→</div>
+        <div class="st" style="border-top:2px solid var(--accent)"><div class="t">Decide</div><div class="n" style="font-size:22px;color:var(--accent)">收斂了嗎？</div><div class="d">問題數有下降？未達上限？</div></div>
+      </div>
+      <div class="loopnote">↺ 是 → 繼續下一輪　·　達上限 / 兩輪未收斂 → <b style="color:var(--accent)">停，轉人工</b></div>
+    </section>
+
+    <footer class="foot"><div class="wrap"><div class="in">
+      <small>AGENT 03 // FIX · 產線完成</small>
+      <div class="pager"><a onclick="go('eval')">← 02 · Evaluation</a><a onclick="go('home')">回總覽 →</a></div>
+    </div></div></footer>
+  </div>
+</div>
+
+</main>
+
+<script>
+  const pages=['home','principle','design','eval','fix'];
+  function go(id){
+    pages.forEach(p=>document.getElementById('page-'+p).classList.toggle('on',p===id));
+    document.querySelectorAll('[data-nav]').forEach(a=>a.classList.toggle('active',a.getAttribute('data-nav')===id));
+    document.getElementById('mpanel').classList.remove('open');
+    window.scrollTo({top:0,behavior:'instant'});
+    history.replaceState(null,'','#'+id);
+  }
+  function toggleMenu(){document.getElementById('mpanel').classList.toggle('open')}
+  function toggleTheme(){
+    const h=document.documentElement;
+    const dark=h.getAttribute('data-theme')==='dark';
+    h.setAttribute('data-theme',dark?'light':'dark');
+    document.querySelectorAll('#themebtn').forEach(b=>b.textContent=dark?'☾':'☀');
+  }
+  function setFS(diff){
+    document.documentElement.style.setProperty('--fs',diff);
+    const map={'-3':'fs-s','0':'fs-m','4':'fs-l'};
+    document.querySelectorAll('.ctrl .grp button').forEach(b=>b.classList.remove('on'));
+    const id=map[String(diff)];
+    if(id){const el=document.getElementById(id);if(el)el.classList.add('on')}
+  }
+  const h=(location.hash||'#home').slice(1);
+  if(pages.includes(h))go(h);
+</script>
+</body>
+</html>
