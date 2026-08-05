@@ -330,7 +330,7 @@
     <div class="hero">
       <div class="kick">Design System · Agent Pipeline</div>
       <h1 class="giant">讓 AI 自己<span class="l2">生成 · 檢查 · 修正</span></h1>
-      <p class="say">元件規範已經寫得很清楚了 —— 但清楚的規範，只有在<b>被確實執行</b>時才有價值。這份指南帶你建置一組互相接力的 AI Agent，把規範從一份文件，變成一條會自我把關的產線。</p>
+      <p class="say">這份指南帶你建置一組互相接力的 AI Agent，把 Design System 從一份文件，變成一條會自我把關的工作流。</p>
       <div class="meta">
         <div>對象<span>UED 設計師</span></div>
         <div>工具<span>AI + Notion MCP + Figma MCP</span></div>
@@ -340,7 +340,9 @@
   </div>
 
   <div class="wrap">
-    <div class="pipe">
+    <div class="rule" style="margin:40px 0 22px"></div>
+    <div class="lbl" style="color:var(--ink);font-size:18px;letter-spacing:.18em;margin-bottom:18px">UED New Workflow</div>
+    <div class="pipe" style="margin-top:0">
       <div class="st g"><div class="t">Agent 01</div><div class="n">Design</div><div class="d">依規範產出設計稿，回報用了哪些元件</div></div>
       <div class="ar">→</div>
       <div class="st e"><div class="t">Agent 02</div><div class="n">Evaluation</div><div class="d">逐條比對規範，產出 pass / fail 清單</div></div>
@@ -354,16 +356,10 @@
     <div class="wrap">
       <div class="lbl">為什麼要做這件事</div>
       <div class="measure body-lg">
-        <h2 class="big" style="margin-bottom:30px">規範不會自己被遵守</h2>
-        <p>我們花了很多力氣把元件規範整理出來 —— 色票、尺寸 token、禁用規則、決策邏輯，全都寫進了 MD 與 JSON。但在真實的專案裡，規範被翻開的次數，遠少於它被略過的次數。設計稿趕、規範厚，人總會憑手感做完再說。</p>
-        <p>而市面上大多數 AI 設計教學，也只停在第一步：給一段 prompt、生一張圖、好看就收 —— 那只是整條產線的<strong>半套</strong>。因為單一 Agent 有三個先天問題：</p>
-        <ul class="clean">
-          <li>沒有把關者，錯了不會有人發現</li>
-          <li>「看起來對」不等於「符合規範」—— 手感無法稽核</li>
-          <li>沒有明確的交接規格，環節之間串不起來</li>
-        </ul>
-        <p>與此同時，整個金控正在盤點各團隊如何把 AI 融入設計流程。<strong>能不能證明我們的規範是「被系統化執行」的，而不只是「被寫下來」的</strong>，會直接決定 UED 在這波盤點裡站在什麼位置。</p>
-        <p>所以我們要建的，不是一個會畫圖的 AI，而是一條<strong>能互相交接、能被稽核、跑不過會停下來轉人工</strong>的產線 —— 規範不再是靜態文件，而是會自動產出、自動比對、自動修正的基礎建設。這是我們手上真正跟別人不一樣的東西。</p>
+        <h2 class="big" style="margin-bottom:30px">AI 時代下的設計變革</h2>
+        <p>去年我們做了許多 AI 嘗試，打下了底子。今年，整個組織都在盤點如何把 AI 真正融入設計流程——而我們要交出的，不只是零星的嘗試，而是一套自己實際跑得動的 Design Workflow。</p>
+        <p>這套 workflow 的架構，是產險驗證過、方向可行的流程，也會是 UED 未來共用的工作方式。但它要靠你們親手建起來——因為你們是最清楚 AI Agent 建置細節的人，一個環節能不能成立、怎麼串才順，只有實際做的人最有體會。</p>
+        <p>我們已經把每一步的做法、可能踩到的坑整理在這個網站上。過程中有任何問題，隨時來找我們。</p>
       </div>
     </div>
   </section>
@@ -392,7 +388,7 @@
     <div class="aban">
       <div class="code mono" style="color:var(--accent)">// PRINCIPLES</div>
       <h1>建置原理</h1>
-      <p class="role">在動手做任何一個 Agent 之前，先理解這四個原理 —— 它們會決定三個 Agent 串起來會順跑、還是會互相打架。</p>
+      <p class="role">在動手做任何一個 Agent 之前，先理解這幾個原理 —— 它們會決定三個 Agent 串起來會順跑、還是會互相打架。</p>
     </div>
 
     <section style="padding-top:36px">
@@ -408,26 +404,18 @@
           <div class="prin"><div class="pn serif">01</div><div>
             <h3>檢查者，要跟生成者隔離</h3>
             <p>Evaluation Agent 絕對不能看到 Design Agent 是「怎麼想的」。如果它讀得到生成時的推理過程，它會順著那套邏輯點頭 —— 生成者說「這裡留白是刻意的」，檢查者就會同意，於是審查失去意義。</p>
-            <p class="do"><span class="tg">怎麼做</span>把兩個 Agent 拆成獨立的 Skill / 對話，別讓它們共用同一段上下文。檢查者的輸入只餵兩樣：Design 的<strong>產出結果</strong>與 Notion 上的<strong>規範</strong> —— 生成時的推理過程一律不傳進去。</p>
-            <div class="note">真正的獨立，是這組架構的核心要求。檢查者只該拿到兩樣東西：產出結果，以及規範本身。中間的推理，不給。</div>
+            <div class="note">把兩個 Agent 拆成獨立的 Skill / 對話，別讓它們共用同一段上下文。檢查者的輸入只餵兩樣：Design 的產出結果與 Notion 上的規範 —— 生成時的推理過程一律不傳進去。</div>
           </div></div>
           <div class="prin"><div class="pn serif">02</div><div>
-            <h3>檢查者的角色是「找碴」，不是「打分數」</h3>
-            <p>不要叫 Evaluation Agent 給設計稿打 85 分。分數是模糊的品質判斷，稽核時沒人知道那 15 分扣在哪。</p>
-            <p class="do"><span class="tg">怎麼做</span>在它的 prompt 裡直接下對抗式指令：「找出所有違反規範的地方，一條一條列出來」。輸出格式強制成「違反了哪條 rule ID＋在哪個 component」，而不是任何形式的總分或評語。</p>
-            <div class="note">框定成找碴，模型才會認真挑毛病；框定成評分，同一個模型往往會傾向給過。</div>
-          </div></div>
-          <div class="prin"><div class="pn serif">03</div><div>
-            <h3>判準要是「可勾選的清單」，不是「好不好看」</h3>
-            <p>不要用「整體感覺不夠精緻」這種模糊判斷。審查標準必須結構化成一條一條可以逐項核對的規則。</p>
-            <p class="do"><span class="tg">怎麼做</span>把規範拆成一條條有 ID 的規則寫進 JSON —— <code>R-COLOR-01：主色 hex 等於 token 值</code>、<code>R-SIZE-04：間距用 size token</code>。每條都能明確標 pass / fail，檢查時就是拿這份清單逐格打勾。</p>
-            <div class="note">可勾選的清單才有稽核軌跡。這也正好是我們把規範寫成 JSON 的理由：JSON 就是那份清單。</div>
-          </div></div>
-          <div class="prin"><div class="pn serif">04</div><div>
             <h3>迴圈要有上限，跑不過就轉人工</h3>
             <p>Evaluation → Fix → 再 Evaluation 是一個迴圈。沒有上限，它可能無限地修下去。重試上限的意義不是「湊到幾輪」，而是「什麼時候該讓人接手」。</p>
             <p class="do"><span class="tg">怎麼做</span>在迴圈裡設一個計數上限（預設 3 輪）當停損。另外加一條收斂判斷：連續兩輪問題數沒下降就提前停。任一條件觸發，就把最後一份問題報告交給設計師人工處理。</p>
             <div class="note">上限管的是交棒時機，不是完美程度。跑滿還沒過，就把最後一份問題報告交給設計師，而不是讓 Agent 繼續繞。</div>
+          </div></div>
+          <div class="prin"><div class="pn serif">03</div><div>
+            <h3>哪些要跟 UED 一致，哪些可以自己決定</h3>
+            <p>三個 Agent 大部分的實作細節都可以彈性 —— 用哪個工具、prompt 怎麼寫、複雜頁面跑幾輪，都由你自己決定。但有一件事必須全隊統一。</p>
+            <div class="note">一致的地方：規範一律放在 Notion，而且 Notion 上資料的擺放方式（資料庫結構、欄位、命名）要跟團隊一致 —— 因為三個 Agent 都讀同一份，擺法不一致，agent 就抓不到。其餘（工具、prompt、輪數）都可彈性。</div>
           </div></div>
         </div>
       </div>
@@ -522,8 +510,8 @@
       </div>
 
       <div class="call">
-        <div class="t">關鍵原則 · 呼應建置原理 01 & 02</div>
-        <p>Evaluation Agent 只能拿到<strong>產出結果</strong>與<strong>規範</strong>兩樣東西 —— 絕不給它看 Design Agent 的推理過程，否則它會被帶著走。它的任務是對抗式找碴，不是打分數。</p>
+        <div class="t">關鍵原則</div>
+        <p>Evaluation Agent 只能拿到「產出結果」與「規範」兩樣東西 —— 絕不給它看 Design Agent 的推理過程，否則會被帶著走。它的任務是對抗式找碴，不是打分數：不要它給設計稿打 85 分（稽核時沒人知道那 15 分扣在哪），而是逐條列出「違反了哪條 rule ID、在哪個 component」。判準也不能是「整體感覺不夠精緻」，必須是可逐項勾選的規則清單（就是下面那份 JSON 判準）。</p>
       </div>
 
       <div class="lbl" style="margin-top:20px">建置步驟</div>
