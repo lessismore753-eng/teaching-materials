@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+
+<html data-fontsize="m" data-theme="light" lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>設計 Agent 建置指南 — UED</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&amp;family=Noto+Serif+TC:wght@300;400;600;700&amp;family=Noto+Sans+TC:wght@300;400;500;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    /* light (default, like dayloog) */
+    --paper:#f3f1ec;
+    --paper-2:#eae7df;
+    --ink:#17150f;
+    --ink-soft:#5c584d;
+    --ink-faint:#928c7e;
+    --line:#d8d3c8;
+    --line-soft:#e2ddd3;
+    --hover:#e8e4da;
+    --gen:#3f7d6e;    /* muted teal */
+    --eval:#a9772a;   /* muted ochre */
+    --fix:#5560a8;    /* muted indigo */
+    --accent:#b64926; /* restrained clay — used almost nowhere */
+    --fs:0;           /* font-size diff, px, injected by buttons */
+  }
+  html[data-theme="dark"]{
+    --paper:#14130f;
+    --paper-2:#1c1a15;
+    --ink:#efece3;
+    --ink-soft:#a8a396;
+    --ink-faint:#6f6a5d;
+    --line:#33302a;
+    --line-soft:#26241f;
+    --hover:#211f19;
+    --gen:#6cc3ae;
+    --eval:#d8a44e;
+    --fix:#8f9be0;
+    --accent:#e07a4f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Noto Sans TC",system-ui,sans-serif;
+    font-weight:400;
+    line-height:1.85;
+    -webkit-font-smoothing:antialiased;
+    font-size:calc(16px + var(--fs) * 1px);
+    transition:background .5s ease,color .5s ease;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--ink);color:var(--paper)}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:"Space Mono",monospace}
+  .serif{font-family:"Fraunces","Noto Serif TC",serif}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 40px;position:relative}
+
+  /* ---------------- header ---------------- */
+  .top{
+    position:fixed;top:0;left:0;right:0;z-index:60;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:24px 40px;mix-blend-mode:normal;
+    pointer-events:none;
+  }
+  .top > *{pointer-events:auto}
+  .top .site{
+    font-family:"Space Mono",monospace;font-size:13px;letter-spacing:.02em;
+    display:flex;align-items:center;gap:10px;cursor:pointer;
+  }
+  .top .site .dot{width:8px;height:8px;background:var(--accent);border-radius:50%;display:inline-block}
+  .top .site b{font-weight:700}
+  .top .site span{color:var(--ink-faint)}
+
+  /* nav (right) */
+  .topnav{display:flex;gap:2px;align-items:center;font-family:"Space Mono",monospace;font-size:12.5px}
+  .topnav a{
+    padding:6px 13px;color:var(--ink-soft);transition:.2s;position:relative;
+  }
+  .topnav a:hover{color:var(--ink)}
+  .topnav a.active{color:var(--ink)}
+  .topnav a.active::after{
+    content:"";position:absolute;left:13px;right:13px;bottom:2px;height:1px;background:var(--accent);
+  }
+  .topnav .div{width:1px;height:16px;background:var(--line);margin:0 8px}
+
+  /* controls: theme + fontsize */
+  .ctrl{display:flex;gap:4px;align-items:center}
+  .ctrl button{
+    font-family:"Space Mono",monospace;font-size:11px;
+    background:none;border:1px solid var(--line);color:var(--ink-soft);
+    width:26px;height:26px;cursor:pointer;transition:.18s;display:grid;place-items:center;padding:0;
+  }
+  .ctrl button:hover{border-color:var(--ink-faint);color:var(--ink)}
+  .ctrl button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .ctrl .grp{display:flex;border:1px solid var(--line)}
+  .ctrl .grp button{border:none;border-right:1px solid var(--line)}
+  .ctrl .grp button:last-child{border-right:none}
+
+  .menu-toggle{display:none}
+
+  /* ---------------- page routing ---------------- */
+  .page{display:none}
+  .page.on{display:block;animation:rise .55s cubic-bezier(.2,.7,.2,1)}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  /* ---------------- hero (signature: giant display) ---------------- */
+  .hero{padding:150px 0 40px}
+  .hero .kick{
+    font-family:"Space Mono",monospace;font-size:12.5px;letter-spacing:.16em;
+    color:var(--ink-faint);text-transform:uppercase;margin-bottom:30px;
+    display:flex;align-items:center;gap:12px;
+  }
+  .hero .kick::before{content:"";width:30px;height:1px;background:var(--ink-faint)}
+  .giant{
+    font-family:"Fraunces","Noto Serif TC",serif;font-weight:400;
+    font-size:clamp(44px,8.5vw,118px);line-height:1.0;letter-spacing:-.025em;
+    margin:0 0 8px -.02em;
+  }
+  .giant .l2{display:block;font-weight:400}
+  .hero .say{
+    max-width:600px;margin:48px 0 0;font-size:calc(19px + var(--fs)*1px);
+    line-height:1.75;color:var(--ink-soft);font-weight:400;
+  }
+  .hero .say b{color:var(--ink);font-weight:500}
+  .hero .meta{
+    margin-top:44px;display:flex;gap:40px;flex-wrap:wrap;
+    font-family:"Space Mono",monospace;font-size:12.5px;color:var(--ink-faint);
+  }
+  .hero .meta div span{color:var(--ink);display:block;margin-top:3px}
+
+  /* ---------------- section frame ---------------- */
+  section{padding:64px 0}
+  .rule{height:1px;background:var(--line);margin:0}
+  .lbl{
+    font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-faint);margin-bottom:34px;
+  }
+  h2.big{font-family:"Fraunces","Noto Serif TC",serif;font-weight:400;font-size:clamp(30px,5vw,54px);line-height:1.12;letter-spacing:-.02em}
+  .measure{max-width:720px}
+  p{font-size:calc(16.5px + var(--fs)*1px);color:var(--ink-soft);font-weight:400}
+  p strong,strong{color:var(--ink);font-weight:600}
+  .body-lg p{font-size:calc(18px + var(--fs)*1px);line-height:1.8;margin-bottom:22px}
+
+  ul.clean{list-style:none;margin:22px 0}
+  ul.clean li{position:relative;padding-left:30px;margin-bottom:14px;color:var(--ink-soft);font-weight:400;font-size:calc(16.5px + var(--fs)*1px)}
+  ul.clean li::before{content:"—";position:absolute;left:0;color:var(--accent)}
+
+  /* ---------------- index list (dayloog signature list) ---------------- */
+  .index{margin-top:20px;border-top:1px solid var(--line)}
+  .index a{
+    display:grid;grid-template-columns:80px 1fr auto;gap:30px;align-items:baseline;
+    padding:34px 8px;border-bottom:1px solid var(--line);
+    transition:padding .35s cubic-bezier(.2,.7,.2,1),background .3s;
+  }
+  .index a:hover{padding-left:26px;padding-right:26px;background:var(--hover)}
+  .index a .no{font-family:"Space Mono",monospace;font-size:13px;color:var(--ink-faint)}
+  .index a .ti{font-family:"Fraunces","Noto Serif TC",serif;font-weight:400;font-size:clamp(24px,3.6vw,40px);line-height:1.1;letter-spacing:-.01em;color:var(--ink)}
+  .index a .ti .sub{display:block;font-family:"Noto Sans TC";font-weight:400;font-size:calc(15px + var(--fs)*1px);color:var(--ink-soft);margin-top:10px;letter-spacing:0;line-height:1.6;max-width:560px}
+  .index a .go{font-family:"Space Mono",monospace;font-size:20px;color:var(--ink-faint);transition:.3s;justify-self:end}
+  .index a:hover .go{color:var(--accent);transform:translateX(6px)}
+  .index a .tag{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+  .index a.g .tag{color:var(--gen)} .index a.e .tag{color:var(--eval)} .index a.f .tag{color:var(--fix)} .index a.p .tag{color:var(--accent)}
+
+  /* ---------------- pipeline (kept, restyled minimal) ---------------- */
+  .pipe{margin:56px 0 10px;display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:0;align-items:stretch}
+  .pipe .st{padding:30px 26px;border:1px solid var(--line);background:var(--paper-2)}
+  .pipe .st .t{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+  .pipe .st .n{font-family:"Fraunces","Noto Serif TC",serif;font-size:27px;font-weight:400;margin-bottom:8px}
+  .pipe .st .d{font-size:calc(13.5px + var(--fs)*1px);color:var(--ink-soft);font-weight:400;line-height:1.55}
+  .pipe .st.g{border-top:2px solid var(--gen)} .pipe .st.g .n{color:var(--gen)}
+  .pipe .st.e{border-top:2px solid var(--eval)} .pipe .st.e .n{color:var(--eval)}
+  .pipe .st.f{border-top:2px solid var(--fix)} .pipe .st.f .n{color:var(--fix)}
+  .pipe .ar{display:flex;align-items:center;justify-content:center;padding:0 16px;font-family:"Space Mono",monospace;color:var(--ink-faint);font-size:18px}
+  .loopnote{
+    margin-top:16px;font-family:"Space Mono",monospace;font-size:calc(12.5px + var(--fs)*1px);
+    color:var(--ink-soft);padding:14px 20px;border:1px dashed var(--line);background:var(--paper-2);
+  }
+  .loopnote b{color:var(--eval);font-weight:700}
+
+  /* ---------------- tool-agnostic note ---------------- */
+  .tool{border:1px solid var(--line);padding:32px 34px;margin:8px 0;background:var(--paper-2)}
+  .tool .h{font-family:"Space Mono",monospace;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:16px}
+  .tool p{font-size:calc(16.5px + var(--fs)*1px)}
+  .tool p + p{margin-top:12px;font-size:calc(15px + var(--fs)*1px);color:var(--ink-faint)}
+  .tool b{font-family:"Space Mono",monospace;font-weight:700;font-size:calc(14px + var(--fs)*1px);padding:1px 8px;border:1px solid var(--line)}
+  .tool .cc{color:var(--gen)} .tool .fg{color:var(--fix)} .tool .cx{color:var(--eval)}
+
+  /* ---------------- principles (numbered typographic list) ---------------- */
+  .prins{margin-top:10px}
+  .prin{display:grid;grid-template-columns:90px 1fr;gap:36px;padding:40px 0;border-top:1px solid var(--line)}
+  .prin:last-child{border-bottom:1px solid var(--line)}
+  .prin .pn{font-family:"Fraunces",serif;font-weight:300;font-size:52px;line-height:1;color:var(--line);font-style:italic}
+  .prin h3{font-family:"Fraunces","Noto Serif TC",serif;font-weight:500;font-size:calc(23px + var(--fs)*1px);line-height:1.3;margin-bottom:14px;color:var(--ink)}
+  .prin p{font-size:calc(16px + var(--fs)*1px)}
+  .prin .note{margin-top:16px;padding-left:20px;border-left:2px solid var(--accent);color:var(--ink-soft);font-size:calc(14.5px + var(--fs)*1px)}
+  .prin .note b{color:var(--ink);font-weight:600}
+  .prin .do{margin-top:14px;font-size:calc(15px + var(--fs)*1px);color:var(--ink)}
+  .prin .do .tg{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.08em;color:var(--gen);text-transform:uppercase;margin-right:10px}
+  .prin .do code{font-family:"Space Mono",monospace;font-size:calc(12.5px + var(--fs)*1px);color:var(--ink);background:var(--paper-2);padding:1px 6px;border:1px solid var(--line)}
+
+  /* ---------------- agent page banner ---------------- */
+  .aban{padding:150px 0 20px}
+  .aban .code{font-family:"Space Mono",monospace;font-size:13px;letter-spacing:.16em;margin-bottom:24px}
+  .aban h1{font-family:"Fraunces","Noto Serif TC",serif;font-weight:300;font-size:clamp(52px,11vw,140px);line-height:.92;letter-spacing:-.03em}
+  .aban .role{max-width:620px;margin-top:34px;font-size:calc(18px + var(--fs)*1px);color:var(--ink-soft);font-weight:400;line-height:1.75}
+  .aban.g .code,.aban.g h1{color:var(--gen)}
+  .aban.e .code,.aban.e h1{color:var(--eval)}
+  .aban.f .code,.aban.f h1{color:var(--fix)}
+
+  .stations{display:grid;grid-template-columns:1fr 1fr 1fr;margin:44px 0 0;border:1px solid var(--line)}
+  .stations a{padding:16px 14px;text-align:center;font-family:"Space Mono",monospace;font-size:12px;color:var(--ink-faint);border-right:1px solid var(--line);transition:.2s;letter-spacing:.03em}
+  .stations a:last-child{border-right:none}
+  .stations a:hover{color:var(--ink);background:var(--hover)}
+  .stations a.hg{background:var(--gen);color:#fff}
+  .stations a.he{background:var(--eval);color:#fff}
+  .stations a.hf{background:var(--fix);color:#fff}
+  html[data-theme="dark"] .stations a.hg,html[data-theme="dark"] .stations a.he,html[data-theme="dark"] .stations a.hf{color:var(--paper)}
+
+  /* io */
+  .io{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:40px 0;border:1px solid var(--line)}
+  .io > div{padding:26px 28px}
+  .io > div:first-child{border-right:1px solid var(--line)}
+  .io .k{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+  .io .v{font-size:calc(15.5px + var(--fs)*1px);color:var(--ink);font-weight:400}
+  .io .v code{font-family:"Space Mono",monospace;font-size:calc(13px + var(--fs)*1px);color:var(--accent);font-weight:700}
+
+  /* steps as typographic list */
+  .flow{margin-top:8px}
+  .fstep{display:grid;grid-template-columns:70px 1fr;gap:30px;padding:32px 0;border-top:1px solid var(--line);align-items:start}
+  .fstep:last-child{border-bottom:1px solid var(--line)}
+  .fstep .sn{font-family:"Space Mono",monospace;font-size:14px;color:var(--ink-faint);padding-top:6px}
+  .fstep h3{font-family:"Fraunces","Noto Serif TC",serif;font-weight:500;font-size:calc(20px + var(--fs)*1px);margin-bottom:9px;line-height:1.35}
+  .fstep p{font-size:calc(15.5px + var(--fs)*1px)}
+  .fstep p code{font-family:"Space Mono",monospace;font-size:calc(13px + var(--fs)*1px);color:var(--ink)}
+  .fstep .tt{display:inline-block;margin-top:12px;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.06em;color:var(--ink-faint);padding:3px 10px;border:1px solid var(--line)}
+
+  /* callout */
+  .call{border-left:2px solid var(--accent);padding:8px 0 8px 26px;margin:36px 0}
+  .call .t{font-family:"Space Mono",monospace;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+  .call p{font-size:calc(16px + var(--fs)*1px);color:var(--ink)}
+
+  /* checklist */
+  .check{margin:32px 0;border:1px solid var(--line)}
+  .check .h{padding:15px 22px;border-bottom:1px solid var(--line);font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.1em;color:var(--eval);text-transform:uppercase}
+  .check .ci{display:flex;gap:16px;padding:16px 22px;border-bottom:1px solid var(--line-soft);align-items:center}
+  .check .ci:last-child{border-bottom:none}
+  .check .bx{width:15px;height:15px;border:1.5px solid var(--eval);flex-shrink:0}
+  .check .ci code{font-family:"Space Mono",monospace;font-size:calc(12px + var(--fs)*1px);color:var(--ink-faint);width:120px;flex-shrink:0}
+  .check .ci span{font-size:calc(14.5px + var(--fs)*1px);color:var(--ink);font-weight:400}
+
+  /* two-up */
+  .twoup{display:grid;grid-template-columns:1fr 1fr;gap:56px}
+
+  /* evaluation media layout */
+  .mediaflow{margin-top:18px;border-top:1px solid var(--line)}
+  .mrow{display:grid;grid-template-columns:minmax(320px, 580px) 1fr;gap:48px;padding:42px 0;border-bottom:1px solid var(--line);align-items:start}
+  .mfigure{width:100%}
+  .mfigure a{display:block;cursor:zoom-in}
+  .mfigure img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border:1px solid var(--line);background:#d4d1ca}
+  .mfigure .fcap{margin-top:10px;font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.08em;color:var(--ink-faint)}
+  .mtxt h3{font-family:"Fraunces","Noto Serif TC",serif;font-weight:500;font-size:calc(28px + var(--fs)*1px);line-height:1.3;margin-bottom:14px;color:var(--ink)}
+  .mtxt p{font-size:calc(16px + var(--fs)*1px);margin-bottom:12px}
+  .mtxt ul.clean{margin:14px 0 0}
+  .lightbox{position:fixed;inset:0;background:rgba(20,19,15,.86);display:none;align-items:center;justify-content:center;z-index:120;padding:40px}
+  .lightbox.open{display:flex}
+  .lightbox .lb-inner{max-width:min(92vw, 1200px);max-height:92vh;display:flex;flex-direction:column;gap:14px;align-items:center}
+  .lightbox img{max-width:100%;max-height:82vh;border:1px solid rgba(255,255,255,.16);background:#fff;display:block}
+  .lightbox .lb-cap{font-family:"Noto Sans TC",system-ui,sans-serif;font-size:14px;color:#f3f1ec;text-align:center}
+  .lightbox .lb-close{position:absolute;top:24px;right:24px;width:42px;height:42px;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;font-size:22px;cursor:pointer}
+  .takeaways{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:18px}
+  .tk{border:1px solid var(--line);padding:24px;background:var(--paper-2)}
+  .tk .k{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--eval);margin-bottom:12px}
+  .tk h3{font-family:"Fraunces","Noto Serif TC",serif;font-weight:500;font-size:calc(22px + var(--fs)*1px);line-height:1.3;margin-bottom:10px;color:var(--ink)}
+  .tk p{font-size:calc(15px + var(--fs)*1px)}
+
+  /* footer / pager */
+  footer.foot{border-top:1px solid var(--line);margin-top:60px;padding:44px 0 60px}
+  .foot .in{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
+  .foot .in small{font-family:"Space Mono",monospace;font-size:12px;color:var(--ink-faint)}
+  .pager{display:flex;gap:8px}
+  .pager a{font-family:"Space Mono",monospace;font-size:12.5px;color:var(--ink-soft);padding:11px 20px;border:1px solid var(--line);transition:.2s}
+  .pager a:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+  /* mobile menu panel */
+  .mpanel{position:fixed;inset:0;z-index:55;background:var(--paper);display:none;flex-direction:column;justify-content:center;padding:40px;gap:6px}
+  .mpanel.open{display:flex}
+  .mpanel a{font-family:"Fraunces","Noto Serif TC",serif;font-size:34px;font-weight:400;color:var(--ink);padding:12px 0;border-bottom:1px solid var(--line)}
+  .mpanel a .en{font-family:"Space Mono",monospace;font-size:13px;color:var(--ink-faint);display:block}
+
+  @media(max-width:900px){
+    .wrap{padding:0 24px}
+    .top{padding:18px 24px}
+    .topnav{display:none}
+    .menu-toggle{display:grid;place-items:center;font-family:"Space Mono",monospace;font-size:12px;background:none;border:1px solid var(--line);color:var(--ink);height:26px;padding:0 12px;cursor:pointer}
+    .pipe{grid-template-columns:1fr}
+    .pipe .ar{transform:rotate(90deg);padding:10px 0}
+    .io,.twoup,.takeaways{grid-template-columns:1fr}
+    .mrow{grid-template-columns:1fr;gap:20px}
+    .io > div:first-child{border-right:none;border-bottom:1px solid var(--line)}
+    .index a{grid-template-columns:50px 1fr auto;gap:16px}
+    .stations{grid-template-columns:1fr}
+    .stations a{border-right:none;border-bottom:1px solid var(--line)}
+    .prin{grid-template-columns:1fr;gap:12px}
+    .prin .pn{font-size:38px}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:background .3s,color .3s!important}}
+
+  .mtxt .prompt-example{
+    margin:16px 0 22px;padding:18px 20px;border-left:2px solid var(--eval);
+    font-size:calc(17px + var(--fs)*1px);line-height:1.85;color:var(--ink);font-weight:600;
+    background:var(--paper-2);
+  }
+  .mtxt .question-list{margin-top:8px}
+  .mtxt .question-list p{margin-bottom:12px;color:var(--ink-soft)}
+  .mtxt .question-list strong{display:inline-block;width:28px;color:var(--eval);font-family:"Space Mono",monospace;font-size:13px}
+  .mtxt .step-sequence{
+    margin:14px 0 20px;padding:16px 18px;border:1px solid var(--line);background:var(--paper-2);
+    color:var(--ink);font-family:"Space Mono",monospace;font-size:calc(13px + var(--fs)*1px);line-height:1.9;
+  }
+
+  /* Evaluation 圖片輪播：完整顯示，不裁切 */
+  .mfigure{width:100%;min-width:0}
+  .image-carousel{
+    position:relative;
+    width:100%;
+    border:1px solid var(--line);
+    background:#111;
+    overflow:hidden;
+  }
+  .image-carousel__viewport{
+    width:100%;
+    overflow:hidden;
+    background:#111;
+  }
+  .image-carousel__track{
+    display:flex;
+    width:100%;
+    align-items:flex-start;
+    transition:transform .32s cubic-bezier(.2,.7,.2,1);
+    will-change:transform;
+  }
+  .image-carousel__slide{
+    flex:0 0 100%;
+    width:100%;
+    min-width:100%;
+    border:0;
+    padding:0;
+    background:#111;
+    cursor:zoom-in;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .image-carousel__slide img{
+    display:block;
+    width:100%;
+    height:auto;
+    max-width:100%;
+    object-fit:contain;
+    object-position:center;
+    background:#111;
+  }
+  .image-carousel__arrow{
+    position:absolute;
+    top:50%;
+    z-index:4;
+    width:46px;
+    height:46px;
+    transform:translateY(-50%);
+    display:grid;
+    place-items:center;
+    border:1px solid rgba(255,255,255,.55);
+    background:rgba(20,19,15,.78);
+    color:#fff;
+    font-family:"Space Mono",monospace;
+    font-size:21px;
+    cursor:pointer;
+    transition:background .2s,border-color .2s;
+  }
+  .image-carousel__arrow:hover{
+    background:rgba(20,19,15,.96);
+    border-color:#fff;
+  }
+  .image-carousel__arrow--prev{left:14px}
+  .image-carousel__arrow--next{right:14px}
+  .image-carousel__dots{
+    position:absolute;
+    left:50%;
+    bottom:14px;
+    z-index:4;
+    display:flex;
+    gap:8px;
+    padding:7px 10px;
+    transform:translateX(-50%);
+    background:rgba(20,19,15,.72);
+  }
+  .image-carousel__dot{
+    width:9px;
+    height:9px;
+    padding:0;
+    border:1px solid rgba(255,255,255,.8);
+    border-radius:50%;
+    background:transparent;
+    cursor:pointer;
+  }
+  .image-carousel__dot.is-active{background:#fff}
+  .lightbox img{
+    max-width:94vw;
+    max-height:86vh;
+    width:auto;
+    height:auto;
+    object-fit:contain;
+    object-position:center;
+  }
+  @media(max-width:900px){
+    .image-carousel__arrow{
+      width:40px;
+      height:40px;
+    }
+    .image-carousel__arrow--prev{left:8px}
+    .image-carousel__arrow--next{right:8px}
+  }
+</style>
+</head>
+<body>
+<!-- header -->
+<div class="top">
+<div class="site"><span class="dot"></span><b>UED-AI</b> <span>/ agent build</span></div>
+<nav class="topnav">
+<a data-nav="eval" onclick="go('eval')">檢核</a>
+<a data-nav="fix" onclick="go('fix')">修正</a>
+<span class="div"></span>
+<span class="ctrl">
+<span class="grp" title="字級">
+<button id="fs-s" onclick="setFS(-3)">S</button>
+<button class="on" id="fs-m" onclick="setFS(0)">M</button>
+<button id="fs-l" onclick="setFS(4)">L</button>
+</span>
+<button id="themebtn" onclick="toggleTheme()" title="亮 / 暗">☾</button>
+</span>
+</nav>
+<button class="menu-toggle" onclick="toggleMenu()">MENU</button>
+</div>
+<div class="mpanel" id="mpanel">
+<a onclick="go('eval')">檢核 Agent<span class="en">Evaluation</span></a>
+<a onclick="go('fix')">修正 Agent<span class="en">Fix</span></a>
+<div class="ctrl" style="margin-top:30px">
+<span class="grp"><button onclick="setFS(-3)">S</button><button class="on" onclick="setFS(0)">M</button><button onclick="setFS(4)">L</button></span>
+<button onclick="toggleTheme()">☾</button>
+</div>
+</div>
+<main>
+<!-- ============ EVAL ============ -->
+<div class="page on" id="page-eval">
+<div class="wrap">
+<div class="aban e">
+<div class="code mono">AGENT 02 / EVALUATION / v0.3.2</div>
+<h1>Evaluation</h1>
+<p class="role">讀取 Design Agent 做出的 Figma 設計稿，依照 JSON 規格逐項檢查元件、圓角、陰影、尺寸與間距是否正確，最後產出一份可直接交給 Fix Agent 使用的檢核報告。</p>
+<div class="stations">
+<a>01 · DESIGN</a><a class="he">02 · EVALUATION</a><a onclick="go('fix')">03 · FIX</a>
+</div>
+</div>
+<section style="padding-top:20px">
+<div class="io">
+<div><div class="k">Input · 輸入</div><div class="v">Design Agent 產出的<code>Figma 設計稿</code>、要檢查的範圍，以及對應的<code>JSON 規格</code></div></div>
+<div><div class="k">Output · 輸出</div><div class="v">一份可設定檢查範圍的<code>檢核報告</code>，並整理成 Fix Agent 可以直接處理的問題清單</div></div>
+</div>
+<div class="lbl" style="margin-top:20px">從 0 建立 Evaluation Agent</div>
+<p class="measure" style="margin-bottom:12px">如果要從頭把 Evaluation Agent 建起來，建議固定用下面六個項目來寫。先把目標、輸入、檢核規則、輸出格式、驗收標準與禁止事項定清楚，再把內容整理成 Agent 指令。</p>
+<div class="mediaflow">
+<div class="mrow">
+<div class="mfigure"><div aria-label="步驟 1｜定義 Agent 的目標圖片輪播" class="image-carousel" data-carousel=""><div class="image-carousel__viewport"><div class="image-carousel__track"><button aria-label="放大步驟 1｜定義 Agent 的目標第 1 張圖片" class="image-carousel__slide" type="button"><img alt="步驟 1｜定義 Agent 的目標第 1 張" decoding="async" loading="eager" src="./步驟 1｜定義 Agent 的目標.png"/></button></div></div></div><div class="fcap">步驟 1｜定義 Agent 的目標｜點擊圖片可放大</div></div>
+<div class="mtxt"><h3>步驟 1｜定義 Agent 的目標</h3>
+<p>在實際開始前，先定義為什麼要有這個 Agent，以及它在整體流程中要解決什麼問題。可以先回答以下問題：</p>
+<div class="question-list">
+<p><strong>A.</strong> 為什麼需要建立這個 Agent？</p>
+<p><strong>B.</strong> 它在 Design、Evaluation、Fix 的流程中扮演什麼角色？</p>
+<p><strong>C.</strong> 完成工作後，應該為下一個階段帶來什麼結果？</p>
+</div>
+<p>把答案整理後，再寫成一段明確的目標，例如：</p>
+<div class="prompt-example">「你的工作是讀取 Design Agent 產出的設計稿，依照既有規格找出可確認的設計問題，並整理成一份可交給下一階段使用的檢核報告。」</div></div>
+</div>
+<div class="mrow">
+<div class="mfigure"><div aria-label="步驟 2｜準備輸入資料圖片輪播" class="image-carousel" data-carousel=""><div class="image-carousel__viewport"><div class="image-carousel__track"><button aria-label="放大步驟 2｜準備輸入資料第 1 張圖片" class="image-carousel__slide" type="button"><img alt="步驟 2｜準備輸入資料第 1 張" decoding="async" loading="lazy" src="./步驟 2｜準備輸入資料 (1).png"/></button><button aria-label="放大步驟 2｜準備輸入資料第 2 張圖片" class="image-carousel__slide" type="button"><img alt="步驟 2｜準備輸入資料第 2 張" decoding="async" loading="lazy" src="./步驟 2｜準備輸入資料 (2).png"/></button></div></div><button aria-label="上一張圖片" class="image-carousel__arrow image-carousel__arrow--prev" type="button">←</button><button aria-label="下一張圖片" class="image-carousel__arrow image-carousel__arrow--next" type="button">→</button><div class="image-carousel__dots"><button aria-current="true" aria-label="顯示第 1 張圖片" class="image-carousel__dot is-active" data-slide-index="0" type="button"></button><button aria-current="false" aria-label="顯示第 2 張圖片" class="image-carousel__dot" data-slide-index="1" type="button"></button></div></div><div class="fcap">步驟 2｜準備輸入資料｜共 2 張，可使用左右箭頭切換</div></div>
+<div class="mtxt"><h3>步驟 2｜準備輸入資料</h3>
+<p>確定 Agent 的目標後，下一步是整理它執行檢核時需要讀取的資料，以及這些資料放在哪裡。可以先盤點現有資料與缺口：</p>
+<div class="question-list">
+<p><strong>A.</strong> 元件的 JSON 規格是否已經建立完成？</p>
+<p><strong>B.</strong> Figma Library 與 JSON 的位置是否已更新到 Main Guideline？</p>
+<p><strong>C.</strong> Design Agent 產出的設計稿要用什麼方式交給 Evaluation Agent？</p>
+<p><strong>D.</strong> 目前使用的 AI 工具是否已開啟 Figma、Notion 等 MCP 或必要的讀取權限？</p>
+<p><strong>E.</strong> 找不到設計稿、JSON 或元件庫時，Agent 應該停止、略過，還是請使用者補資料？</p>
+</div>
+<p>確認後，把開始檢核前的條件寫進 Agent 指令，例如：</p>
+<div class="prompt-example">「開始檢核前，先確認已取得目標 Figma 檔案、頁面、檢核範圍、對應的 JSON 規格，以及正式元件庫的讀取權限。預設只檢查使用者指定的畫面或元件。如果缺少必要資料，請停止該項檢核，列出缺少內容與無法執行的原因，不得自行補規格。」</div></div>
+</div>
+<div class="mrow">
+<div class="mfigure"><div aria-label="步驟 3｜設定檢核規則圖片輪播" class="image-carousel" data-carousel=""><div class="image-carousel__viewport"><div class="image-carousel__track"><button aria-label="放大步驟 3｜設定檢核規則第 1 張圖片" class="image-carousel__slide" type="button"><img alt="步驟 3｜設定檢核規則第 1 張" decoding="async" loading="lazy" src="./步驟 3｜設定檢核規則 (1).png"/></button><button aria-label="放大步驟 3｜設定檢核規則第 2 張圖片" class="image-carousel__slide" type="button"><img alt="步驟 3｜設定檢核規則第 2 張" decoding="async" loading="lazy" src="./步驟 3｜設定檢核規則 (2).png"/></button><button aria-label="放大步驟 3｜設定檢核規則第 3 張圖片" class="image-carousel__slide" type="button"><img alt="步驟 3｜設定檢核規則第 3 張" decoding="async" loading="lazy" src="./步驟 3｜設定檢核規則 (3).png"/></button></div></div><button aria-label="上一張圖片" class="image-carousel__arrow image-carousel__arrow--prev" type="button">←</button><button aria-label="下一張圖片" class="image-carousel__arrow image-carousel__arrow--next" type="button">→</button><div class="image-carousel__dots"><button aria-current="true" aria-label="顯示第 1 張圖片" class="image-carousel__dot is-active" data-slide-index="0" type="button"></button><button aria-current="false" aria-label="顯示第 2 張圖片" class="image-carousel__dot" data-slide-index="1" type="button"></button><button aria-current="false" aria-label="顯示第 3 張圖片" class="image-carousel__dot" data-slide-index="2" type="button"></button></div></div><div class="fcap">步驟 3｜設定檢核規則｜共 3 張，可使用左右箭頭切換</div></div>
+<div class="mtxt"><h3>步驟 3｜設定檢核規則</h3>
+<p>資料準備好之後，要決定 Agent 實際怎麼檢查。這一段只處理檢查範圍、檢查項目與執行順序，不處理報告格式或最終是否通過：</p>
+<div class="question-list">
+<p><strong>A.</strong> 每次要檢查哪一個頁面、畫面、區塊或元件？範圍多大？</p>
+<p><strong>B.</strong> 要固定檢查哪些面向，例如正式元件、元件狀態、樣式、圓角、陰影、尺寸與間距？</p>
+<p><strong>C.</strong> 數值要檢查到多細？是否允許誤差或例外？</p>
+<p><strong>D.</strong> 檢查順序是否要固定，避免 Agent 憑畫面感覺直接下結論？</p>
+</div>
+<p>確認後，把檢核面向與順序寫成固定流程：</p>
+<div class="step-sequence">①確認檢查範圍 → ②找到對應 JSON → ③讀取實際 Figma 資料 → ④逐項比對規格 → ⑤合併相同原因的問題 → ⑥整理檢核結果</div>
+<div class="prompt-example">「只檢查使用者指定的範圍。依序確認正式元件、元件狀態、顏色與文字樣式、圓角與陰影、尺寸與間距，以及裁切、重疊或超出範圍等問題。JSON 未定義的項目不得自行判定。」</div></div>
+</div>
+<div class="mrow">
+<div class="mfigure"><div aria-label="步驟 4｜設定輸出格式圖片輪播" class="image-carousel" data-carousel=""><div class="image-carousel__viewport"><div class="image-carousel__track"><button aria-label="放大步驟 4｜設定輸出格式第 1 張圖片" class="image-carousel__slide" type="button"><img alt="步驟 4｜設定輸出格式第 1 張" decoding="async" loading="lazy" src="./步驟 4｜設定輸出格式 (1).png"/></button><button aria-label="放大步驟 4｜設定輸出格式第 2 張圖片" class="image-carousel__slide" type="button"><img alt="步驟 4｜設定輸出格式第 2 張" decoding="async" loading="lazy" src="./步驟 4｜設定輸出格式 (2).png"/></button></div></div><button aria-label="上一張圖片" class="image-carousel__arrow image-carousel__arrow--prev" type="button">←</button><button aria-label="下一張圖片" class="image-carousel__arrow image-carousel__arrow--next" type="button">→</button><div class="image-carousel__dots"><button aria-current="true" aria-label="顯示第 1 張圖片" class="image-carousel__dot is-active" data-slide-index="0" type="button"></button><button aria-current="false" aria-label="顯示第 2 張圖片" class="image-carousel__dot" data-slide-index="1" type="button"></button></div></div><div class="fcap">步驟 4｜設定輸出格式｜共 2 張，可使用左右箭頭切換</div></div>
+<div class="mtxt"><h3>步驟 4｜設定輸出格式</h3>
+<p>檢查方式確定後，再從下一階段的使用需求反推報告要怎麼呈現。這一段只定義報告的使用者、欄位、格式與放置位置：</p>
+<div class="question-list">
+<p><strong>A.</strong> 報告要提供給 Fix Agent、設計師，還是兩者都要看？</p>
+<p><strong>B.</strong> 報告要使用表格、文字框，還是其他固定格式？</p>
+<p><strong>C.</strong> 每一筆問題需要包含哪些欄位？</p>
+<p><strong>D.</strong> 最終報告要放在哪個檔案與位置？</p>
+</div>
+<p>確認後，把輸出格式固定下來，例如：</p>
+<div class="prompt-example">「每個問題至少要包含問題編號、問題位置與 Node ID、目前值、預期值、規格來源、建議修法與驗收方式。報告要讓 Fix Agent 與設計師都能閱讀，並放在主要設計畫面右側的獨立報告框。」</div></div>
+</div>
+<div class="mrow">
+<div class="mfigure"><div aria-label="步驟 5｜設定驗收標準圖片輪播" class="image-carousel" data-carousel=""><div class="image-carousel__viewport"><div class="image-carousel__track"><button aria-label="放大步驟 5｜設定驗收標準第 1 張圖片" class="image-carousel__slide" type="button"><img alt="步驟 5｜設定驗收標準第 1 張" decoding="async" loading="lazy" src="./步驟 5｜設定驗收標準 (1).png"/></button><button aria-label="放大步驟 5｜設定驗收標準第 2 張圖片" class="image-carousel__slide" type="button"><img alt="步驟 5｜設定驗收標準第 2 張" decoding="async" loading="lazy" src="./步驟 5｜設定驗收標準 (2).png"/></button></div></div><button aria-label="上一張圖片" class="image-carousel__arrow image-carousel__arrow--prev" type="button">←</button><button aria-label="下一張圖片" class="image-carousel__arrow image-carousel__arrow--next" type="button">→</button><div class="image-carousel__dots"><button aria-current="true" aria-label="顯示第 1 張圖片" class="image-carousel__dot is-active" data-slide-index="0" type="button"></button><button aria-current="false" aria-label="顯示第 2 張圖片" class="image-carousel__dot" data-slide-index="1" type="button"></button></div></div><div class="fcap">步驟 5｜設定驗收標準｜共 2 張，可使用左右箭頭切換</div></div>
+<div class="mtxt"><h3>步驟 5｜設定驗收標準</h3>
+<p>最後要定義什麼情況才算檢核完成，以及整體結果要如何判定，避免 Agent 只跑完流程就自行宣告通過：</p>
+<div class="question-list">
+<p><strong>A.</strong> 指定的檢查範圍要完成到什麼程度，才算本次檢核結束？</p>
+<p><strong>B.</strong> 什麼條件可以判定通過？什麼條件必須判定有問題？</p>
+<p><strong>C.</strong> 規格未定義、資料讀不到或來源互相衝突時，要如何標示？</p>
+<p><strong>D.</strong> 什麼情況下不得判定通過，而必須交由人工確認？</p>
+</div>
+<p>確認後，把完成與判定條件寫清楚，例如：</p>
+<div class="prompt-example">「只有在指定範圍已檢查完成、所有已定義規格都有結果，而且每個問題都有明確證據時，才算完成。規格未定義、資料無法讀取或來源衝突時，必須另外標示為待確認，不得直接判定通過。」</div></div>
+</div>
+<div class="mrow">
+<div class="mfigure"><div aria-label="步驟 6｜設定禁止事項圖片輪播" class="image-carousel" data-carousel=""><div class="image-carousel__viewport"><div class="image-carousel__track"><button aria-label="放大步驟 6｜設定禁止事項第 1 張圖片" class="image-carousel__slide" type="button"><img alt="步驟 6｜設定禁止事項第 1 張" decoding="async" loading="lazy" src="./步驟 6｜設定禁止事項.png"/></button></div></div></div><div class="fcap">步驟 6｜設定禁止事項｜點擊圖片可放大</div></div>
+<div class="mtxt"><h3>步驟 6｜設定禁止事項</h3>
+<p>最後列出 Agent 絕對不能做的事，避免它在資料不足時越權修改、猜測規格或捏造證據：</p>
+<div class="question-list">
+<p><strong>A.</strong> 哪些產品畫面、正式元件、樣式或規格來源不能被修改？</p>
+<p><strong>B.</strong> 哪些情況不能用個人經驗或其他文件補上 JSON 沒寫的規則？</p>
+<p><strong>C.</strong> 哪些 Node ID、數值、樣式套用狀況或規格來源不得自行推測？</p>
+<p><strong>D.</strong> Fix Agent 修正後，應由誰重新檢查並決定是否完成？</p>
+</div>
+<p>確認後，把禁區直接寫進 Agent 指令，例如：</p>
+<div class="prompt-example">「禁止修改產品畫面、正式元件庫與規格來源；禁止用個人經驗補上 JSON 未定義的規則；禁止把仿製或拆開的元件視為正式元件；禁止捏造 Node ID、數值或規格來源。Fix Agent 修正後，必須交回 Evaluation Agent 重新檢核，不能自行宣布完成。」</div></div>
+</div>
+</div>
+<div class="lbl" style="margin-top:44px">關鍵重點</div>
+<div class="takeaways">
+<div class="tk"><div class="k">重點 01</div><h3>先把六個項目定義清楚</h3><p>目標、輸入、檢核規則、輸出格式、驗收標準與禁止事項，這六個項目如果寫得夠清楚，Agent 的執行結果通常會更穩定。</p></div>
+<div class="tk"><div class="k">重點 02</div><h3>檢查起點要小，不要一開始掃全檔</h3><p>先從指定畫面或指定元件開始，才容易建立穩定流程，也比較方便和 Fix Agent 做來回修正。</p></div>
+<div class="tk"><div class="k">重點 03</div><h3>報告要能直接交接</h3><p>真正有價值的輸出不是抓到錯，而是讓 Fix Agent 看完就能動手修，不需要再回頭追資料。</p></div>
+<div class="tk"><div class="k">重點 04</div><h3>規則與報告要分開設定</h3><p>檢核規則負責定義怎麼檢查；輸出格式負責定義結果怎麼呈現。兩者分開，後續調整規則時才不會連帶破壞報告結構。</p></div>
+</div>
+</section>
+<footer class="foot"><div class="wrap"><div class="in">
+<small>AGENT 02 // EVALUATION</small>
+<div class="pager"><a>← 01 · Design</a><a onclick="go('fix')">03 · Fix →</a></div>
+</div></div></footer>
+</div>
+</div>
+<!-- ============ FIX ============ -->
+<div class="page" id="page-fix">
+<div class="wrap">
+<div class="aban f">
+<div class="code mono">AGENT 03 / FIX / v0.2.1</div>
+<h1>Fix</h1>
+<p class="role">讀取檢核 Agent 已確認的問題與 JSON 預期值，針對指定的 Figma 節點做最小幅度、可追蹤的局部修正。每次修改後都要重新讀取節點，確認修正是否真的寫入，最後交回檢核 Agent 重新檢查。</p>
+<div class="stations">
+<a>01 · 設計</a><a onclick="go('eval')">02 · 檢核</a><a class="hf">03 · 修正</a>
+</div>
+</div>
+<section style="padding-top:20px">
+<div class="io">
+<div><div class="k">輸入資料</div><div class="v">檢核 Agent 提供的<code>已確認問題</code>、對應 JSON 規格，以及目標 Figma 節點的讀寫權限</div></div>
+<div><div class="k">輸出結果</div><div class="v">修正後的 Figma 節點、一份<code>修正紀錄表</code>，以及交回檢核 Agent 的重新檢查清單</div></div>
+</div>
+<div class="lbl" style="margin-top:20px">從 0 建立修正 Agent</div>
+<p class="measure" style="margin-bottom:12px">修正 Agent 具備直接改動設計稿的能力，因此重點不是「修得越多越好」，而是把可修範圍、停止條件、驗證方法與交接方式寫清楚。建議固定使用下面六個步驟。</p>
+<div class="mediaflow">
+<div class="mrow">
+<div class="mfigure">
+<div aria-label="步驟 1｜定義修正目標圖片" class="image-carousel" data-carousel="">
+<div class="image-carousel__viewport">
+<div class="image-carousel__track">
+<button aria-label="放大步驟 1｜定義修正目標圖片" class="image-carousel__slide" type="button">
+<img alt="步驟 1｜定義修正目標圖片預留區" decoding="async" loading="lazy" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221200%22%20height%3D%22900%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%2340445f%22/%3E%0A%20%20%3Crect%20x%3D%2254%22%20y%3D%2254%22%20width%3D%221092%22%20height%3D%22792%22%20fill%3D%22%23505675%22%20stroke%3D%22%239da4d8%22%20stroke-width%3D%222%22/%3E%0A%20%20%3Ctext%20x%3D%2294%22%20y%3D%22125%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2238%22%20fill%3D%22%23cbd0ee%22%3E01%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22410%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%22104%22%20fill%3D%22%23f5f6ff%22%3E%E4%BF%AE%E6%AD%A3%E7%9B%AE%E6%A8%99%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22505%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2238%22%20fill%3D%22%23d8dbef%22%3E%E4%BF%AE%E6%AD%A3%20Agent%20%E8%A6%81%E8%A7%A3%E6%B1%BA%E4%BB%80%E9%BA%BC%E5%95%8F%E9%A1%8C%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22760%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2225%22%20fill%3D%22%23aeb5df%22%3E%E4%BF%AE%E6%AD%A3%20AGENT%20%C2%B7%20%E5%9C%96%E7%89%87%E9%A0%90%E7%95%99%E5%8D%80%3C/text%3E%0A%3C/svg%3E"/>
+</button>
+</div>
+</div>
+</div>
+<div class="fcap">步驟 1｜定義修正目標｜圖片預留區，可自行替換</div>
+</div>
+<div class="mtxt">
+<h3>步驟 1｜定義修正目標</h3>
+<p>檢核 Agent 已經找出問題，但「知道哪裡錯」不代表可以直接全面重做。第一步要先說清楚修正 Agent 在流程中的角色：</p>
+<div class="question-list">
+<p><strong>A.</strong> 修正 Agent 只處理哪些已確認的問題？</p>
+<p><strong>B.</strong> 允許修改哪些節點與屬性？修正範圍要多小？</p>
+<p><strong>C.</strong> 修正完成後，由誰重新檢查並判定是否通過？</p>
+</div>
+<p>把答案整理後，再寫成明確的目標，例如：</p>
+<div class="prompt-example">「你的工作是讀取檢核 Agent 已確認的問題，依照 JSON 規格，針對指定的 Figma 節點做最小幅度的局部修正。每次修改後都要重新讀取實際節點，確認修正是否真的寫入，並把修正紀錄交回檢核 Agent 重新檢查；你不能自行宣告問題已正式通過。」</div>
+</div>
+</div>
+<div class="mrow">
+<div class="mfigure">
+<div aria-label="步驟 2｜準備輸入資料圖片" class="image-carousel" data-carousel="">
+<div class="image-carousel__viewport">
+<div class="image-carousel__track">
+<button aria-label="放大步驟 2｜準備輸入資料圖片" class="image-carousel__slide" type="button">
+<img alt="步驟 2｜準備輸入資料圖片預留區" decoding="async" loading="lazy" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221200%22%20height%3D%22900%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%2340445f%22/%3E%0A%20%20%3Crect%20x%3D%2254%22%20y%3D%2254%22%20width%3D%221092%22%20height%3D%22792%22%20fill%3D%22%23505675%22%20stroke%3D%22%239da4d8%22%20stroke-width%3D%222%22/%3E%0A%20%20%3Ctext%20x%3D%2294%22%20y%3D%22125%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2238%22%20fill%3D%22%23cbd0ee%22%3E02%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22410%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%22104%22%20fill%3D%22%23f5f6ff%22%3E%E8%BC%B8%E5%85%A5%E8%B3%87%E6%96%99%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22505%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2238%22%20fill%3D%22%23d8dbef%22%3E%E5%95%8F%E9%A1%8C%E6%B8%85%E5%96%AE%E3%80%81%E8%A6%8F%E6%A0%BC%E8%88%87%E8%AE%80%E5%AF%AB%E6%AC%8A%E9%99%90%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22760%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2225%22%20fill%3D%22%23aeb5df%22%3E%E4%BF%AE%E6%AD%A3%20AGENT%20%C2%B7%20%E5%9C%96%E7%89%87%E9%A0%90%E7%95%99%E5%8D%80%3C/text%3E%0A%3C/svg%3E"/>
+</button>
+</div>
+</div>
+</div>
+<div class="fcap">步驟 2｜準備輸入資料｜圖片預留區，可自行替換</div>
+</div>
+<div class="mtxt">
+<h3>步驟 2｜準備輸入資料</h3>
+<p>修正 Agent 不能只收到一句「這裡有問題」就開始修改。開始前，要先確認每一筆問題是否具備足夠資訊：</p>
+<div class="question-list">
+<p><strong>A.</strong> 是否包含問題編號與目標節點 ID？</p>
+<p><strong>B.</strong> 是否寫清楚目前值、JSON 預期值與規格來源？</p>
+<p><strong>C.</strong> 是否提供修正方式、驗收條件，以及可修改與不可修改的範圍？</p>
+<p><strong>D.</strong> Agent 是否具備目標 Figma 節點的讀取與寫入權限？</p>
+<p><strong>E.</strong> 沒有可處理的問題，或資料不完整時，應該怎麼回報？</p>
+</div>
+<p>確認後，把開始條件寫進 Agent 指令，例如：</p>
+<div class="prompt-example">「開始修正前，先確認每個問題都包含問題編號、目標節點 ID、目前值、JSON 預期值與來源、修正方式、驗收條件，以及可修改與不可修改的範圍。資料不完整時標示 <code>needs-review（需人工確認）</code>；無法讀寫目標節點時停止執行；沒有可處理的問題時回報 <code>no-action（無需處理）</code>。」</div>
+</div>
+</div>
+<div class="mrow">
+<div class="mfigure">
+<div aria-label="步驟 3｜設定修正規則圖片" class="image-carousel" data-carousel="">
+<div class="image-carousel__viewport">
+<div class="image-carousel__track">
+<button aria-label="放大步驟 3｜設定修正規則圖片" class="image-carousel__slide" type="button">
+<img alt="步驟 3｜設定修正規則圖片預留區" decoding="async" loading="lazy" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221200%22%20height%3D%22900%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%2340445f%22/%3E%0A%20%20%3Crect%20x%3D%2254%22%20y%3D%2254%22%20width%3D%221092%22%20height%3D%22792%22%20fill%3D%22%23505675%22%20stroke%3D%22%239da4d8%22%20stroke-width%3D%222%22/%3E%0A%20%20%3Ctext%20x%3D%2294%22%20y%3D%22125%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2238%22%20fill%3D%22%23cbd0ee%22%3E03%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22410%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%22104%22%20fill%3D%22%23f5f6ff%22%3E%E4%BF%AE%E6%AD%A3%E8%A6%8F%E5%89%87%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22505%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2238%22%20fill%3D%22%23d8dbef%22%3E%E6%9C%80%E5%B0%8F%E4%BF%AE%E6%94%B9%E3%80%81%E6%AD%A3%E5%BC%8F%E8%B3%87%E7%94%A2%E3%80%81%E5%AF%AB%E5%85%A5%E9%A9%97%E8%AD%89%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22760%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2225%22%20fill%3D%22%23aeb5df%22%3E%E4%BF%AE%E6%AD%A3%20AGENT%20%C2%B7%20%E5%9C%96%E7%89%87%E9%A0%90%E7%95%99%E5%8D%80%3C/text%3E%0A%3C/svg%3E"/>
+</button>
+</div>
+</div>
+</div>
+<div class="fcap">步驟 3｜設定修正規則｜圖片預留區，可自行替換</div>
+</div>
+<div class="mtxt">
+<h3>步驟 3｜設定修正規則</h3>
+<p>資料完整後，接著要限制 Agent 可以怎麼修。修正 Agent 的價值不是「改得多」，而是「只改必要的地方，而且能證明真的修改成功」：</p>
+<div class="question-list">
+<p><strong>A.</strong> 哪些類型的問題可以由修正 Agent 處理？</p>
+<p><strong>B.</strong> 修改範圍是否只限於達成驗收條件所需的節點與屬性？</p>
+<p><strong>C.</strong> 正式元件、顏色、文字與圖示，是否必須使用正式元件實例或樣式綁定？</p>
+<p><strong>D.</strong> 檢核報告、JSON 與實際 Figma 資料互相衝突時，是否要停止修改？</p>
+<p><strong>E.</strong> 修改後是否要檢查上層、同層節點，以及裁切、重疊、溢位等連帶影響？</p>
+</div>
+<p>建議把修正流程固定為：</p>
+<div class="step-sequence">①讀取可處理的問題 → ②讀取對應 JSON → ③重新讀取目標節點 → ④執行最小修正 → ⑤重新讀取修正後節點 → ⑥檢查連帶影響</div>
+<div class="prompt-example">「只處理已確認且資料完整的問題。正式元件必須使用正式元件實例；顏色、文字、圖示、框線與陰影必須使用正式樣式綁定，不得只填入相同數值。只修改達成驗收條件所需的最小範圍；如需跨區域修改，或檢核報告、JSON 與 Figma 互相衝突，立即停止並標示 <code>needs-review（需人工確認）</code>。」</div>
+</div>
+</div>
+<div class="mrow">
+<div class="mfigure">
+<div aria-label="步驟 4｜設定輸出格式圖片" class="image-carousel" data-carousel="">
+<div class="image-carousel__viewport">
+<div class="image-carousel__track">
+<button aria-label="放大步驟 4｜設定輸出格式圖片" class="image-carousel__slide" type="button">
+<img alt="步驟 4｜設定輸出格式圖片預留區" decoding="async" loading="lazy" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221200%22%20height%3D%22900%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%2340445f%22/%3E%0A%20%20%3Crect%20x%3D%2254%22%20y%3D%2254%22%20width%3D%221092%22%20height%3D%22792%22%20fill%3D%22%23505675%22%20stroke%3D%22%239da4d8%22%20stroke-width%3D%222%22/%3E%0A%20%20%3Ctext%20x%3D%2294%22%20y%3D%22125%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2238%22%20fill%3D%22%23cbd0ee%22%3E04%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22410%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%22104%22%20fill%3D%22%23f5f6ff%22%3E%E8%BC%B8%E5%87%BA%E6%A0%BC%E5%BC%8F%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22505%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2238%22%20fill%3D%22%23d8dbef%22%3E%E4%BF%AE%E6%AD%A3%E7%B4%80%E9%8C%84%E8%88%87%E4%BA%A4%E6%8E%A5%E4%BD%8D%E7%BD%AE%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22760%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2225%22%20fill%3D%22%23aeb5df%22%3E%E4%BF%AE%E6%AD%A3%20AGENT%20%C2%B7%20%E5%9C%96%E7%89%87%E9%A0%90%E7%95%99%E5%8D%80%3C/text%3E%0A%3C/svg%3E"/>
+</button>
+</div>
+</div>
+</div>
+<div class="fcap">步驟 4｜設定輸出格式｜圖片預留區，可自行替換</div>
+</div>
+<div class="mtxt">
+<h3>步驟 4｜設定輸出格式</h3>
+<p>修正完成後，不能只留下「已完成」三個字。輸出內容必須讓設計師與檢核 Agent 看得懂修改內容，也能直接重新驗收：</p>
+<div class="question-list">
+<p><strong>A.</strong> 每個問題要記錄哪些修改前後資訊？</p>
+<p><strong>B.</strong> 未修正的問題與原因是否也要保留？</p>
+<p><strong>C.</strong> 修正結果要放在 Figma 的哪個位置？</p>
+<p><strong>D.</strong> 交回檢核 Agent 時，要提供哪些重新檢查的資料？</p>
+</div>
+<p>確認後，把輸出格式固定下來，例如：</p>
+<div class="prompt-example">「在檢核報告右側建立『修正 Agent｜修正結果｜&lt;主要畫面名稱&gt;』報告框，不得覆蓋原報告或移動產品畫面。輸出內容需包含執行狀態、修正摘要，以及每個問題的目標節點 ID、修正項目、修改前、修改後、結果與待確認事項；最後列出要交回檢核 Agent 重新檢查的問題、節點與 JSON 規格。」</div>
+</div>
+</div>
+<div class="mrow">
+<div class="mfigure">
+<div aria-label="步驟 5｜設定驗收標準圖片" class="image-carousel" data-carousel="">
+<div class="image-carousel__viewport">
+<div class="image-carousel__track">
+<button aria-label="放大步驟 5｜設定驗收標準圖片" class="image-carousel__slide" type="button">
+<img alt="步驟 5｜設定驗收標準圖片預留區" decoding="async" loading="lazy" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221200%22%20height%3D%22900%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%2340445f%22/%3E%0A%20%20%3Crect%20x%3D%2254%22%20y%3D%2254%22%20width%3D%221092%22%20height%3D%22792%22%20fill%3D%22%23505675%22%20stroke%3D%22%239da4d8%22%20stroke-width%3D%222%22/%3E%0A%20%20%3Ctext%20x%3D%2294%22%20y%3D%22125%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2238%22%20fill%3D%22%23cbd0ee%22%3E05%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22410%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%22104%22%20fill%3D%22%23f5f6ff%22%3E%E9%A9%97%E6%94%B6%E6%A8%99%E6%BA%96%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22505%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2238%22%20fill%3D%22%23d8dbef%22%3E%E4%BF%AE%E6%94%B9%E6%88%90%E5%8A%9F%E4%B8%8D%E7%AD%89%E6%96%BC%E6%AD%A3%E5%BC%8F%E9%80%9A%E9%81%8E%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22760%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2225%22%20fill%3D%22%23aeb5df%22%3E%E4%BF%AE%E6%AD%A3%20AGENT%20%C2%B7%20%E5%9C%96%E7%89%87%E9%A0%90%E7%95%99%E5%8D%80%3C/text%3E%0A%3C/svg%3E"/>
+</button>
+</div>
+</div>
+</div>
+<div class="fcap">步驟 5｜設定驗收標準｜圖片預留區，可自行替換</div>
+</div>
+<div class="mtxt">
+<h3>步驟 5｜設定驗收標準</h3>
+<p>最後要定義「修改完成」與「正式通過」的差別。這是修正 Agent 最容易越權的地方：</p>
+<div class="question-list">
+<p><strong>A.</strong> 什麼情況可以標示「修正已套用」？</p>
+<p><strong>B.</strong> 修改失敗或修改後仍不符合規格時，要使用什麼狀態？</p>
+<p><strong>C.</strong> 規格衝突、節點已變更，或無法安全地局部修正時，要如何處理？</p>
+<p><strong>D.</strong> 整次修正要在什麼情況下標示已完成、執行失敗、需人工確認或無需處理？</p>
+<p><strong>E.</strong> 誰有權判定問題已正式通過？</p>
+</div>
+<p>確認後，把驗收標準寫清楚，例如：</p>
+<div class="prompt-example">「只有在修正已成功寫入，而且重新讀取的節點符合 JSON 預期值時，才能標示 <code>fix-applied（修正已套用）</code>。未成功或修改後仍不符合時標示 <code>not-applied（未成功套用）</code>；規格衝突、節點已變更或無法安全局部修正時，標示 <code>needs-review（需人工確認）</code>。修正已套用只代表修改完成，最終是否通過，必須由檢核 Agent 重新檢查後判定。」</div>
+</div>
+</div>
+<div class="mrow">
+<div class="mfigure">
+<div aria-label="步驟 6｜設定禁止事項圖片" class="image-carousel" data-carousel="">
+<div class="image-carousel__viewport">
+<div class="image-carousel__track">
+<button aria-label="放大步驟 6｜設定禁止事項圖片" class="image-carousel__slide" type="button">
+<img alt="步驟 6｜設定禁止事項圖片預留區" decoding="async" loading="lazy" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221200%22%20height%3D%22900%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%2340445f%22/%3E%0A%20%20%3Crect%20x%3D%2254%22%20y%3D%2254%22%20width%3D%221092%22%20height%3D%22792%22%20fill%3D%22%23505675%22%20stroke%3D%22%239da4d8%22%20stroke-width%3D%222%22/%3E%0A%20%20%3Ctext%20x%3D%2294%22%20y%3D%22125%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2238%22%20fill%3D%22%23cbd0ee%22%3E06%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22410%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%22104%22%20fill%3D%22%23f5f6ff%22%3E%E7%A6%81%E6%AD%A2%E4%BA%8B%E9%A0%85%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22505%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2238%22%20fill%3D%22%23d8dbef%22%3E%E4%B8%8D%E8%B6%8A%E6%AC%8A%E3%80%81%E4%B8%8D%E7%8C%9C%E6%B8%AC%E3%80%81%E4%B8%8D%E5%86%92%E5%85%85%E6%AD%A3%E5%BC%8F%E8%B3%87%E7%94%A2%3C/text%3E%0A%20%20%3Ctext%20x%3D%22600%22%20y%3D%22760%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20Noto%20Sans%20TC%2C%20sans-serif%22%20font-size%3D%2225%22%20fill%3D%22%23aeb5df%22%3E%E4%BF%AE%E6%AD%A3%20AGENT%20%C2%B7%20%E5%9C%96%E7%89%87%E9%A0%90%E7%95%99%E5%8D%80%3C/text%3E%0A%3C/svg%3E"/>
+</button>
+</div>
+</div>
+</div>
+<div class="fcap">步驟 6｜設定禁止事項｜圖片預留區，可自行替換</div>
+</div>
+<div class="mtxt">
+<h3>步驟 6｜設定禁止事項</h3>
+<p>修正 Agent 具備直接修改設計稿的能力，因此禁止事項必須比一般 Agent 更明確。可以先確認：</p>
+<div class="question-list">
+<p><strong>A.</strong> 是否禁止修正檢核報告沒有列出的問題？</p>
+<p><strong>B.</strong> 是否禁止用其他文件、個人經驗或偏好，補上 JSON 沒寫的規格？</p>
+<p><strong>C.</strong> 是否禁止修改主元件、變數、文字樣式、正式元件庫或範圍外的節點？</p>
+<p><strong>D.</strong> 是否禁止用一般畫框、手動填入的數值或相同數值，冒充正式元件或樣式綁定？</p>
+<p><strong>E.</strong> 是否禁止在未實際寫入，或未經檢核 Agent 重新檢查前宣告完成？</p>
+</div>
+<p>確認後，把禁區直接寫進 Agent 指令：</p>
+<div class="prompt-example">「不得修正檢核報告未列出的問題；不得用 Markdown、GitHub、一般介面設計經驗或個人偏好補上 JSON 沒寫的規格；不得修改主元件、變數、文字樣式、正式元件庫或範圍外節點；不得用一般畫框、手動數值或相同數值冒充正式資產與樣式綁定；未實際寫入不得宣稱修正完成，也不得把 <code>fix-applied</code> 說成正式通過。」</div>
+</div>
+</div>
+</div>
+<div class="lbl" style="margin-top:44px">關鍵重點</div>
+<div class="takeaways">
+<div class="tk"><div class="k">重點 01</div><h3>只修已確認、可處理的問題</h3><p>問題資料不完整、規格衝突，或無法安全地局部修正時，修正 Agent 的正確做法是停止，不是猜測。</p></div>
+<div class="tk"><div class="k">重點 02</div><h3>最小修正比全面整理更重要</h3><p>只修改達成驗收條件所需的節點與屬性，不順便整理畫面，也不擴大影響範圍。</p></div>
+<div class="tk"><div class="k">重點 03</div><h3>每次修改後都要重新讀取</h3><p>Agent 不能只根據執行指令就認定修改成功，必須重新讀取實際 Figma 節點，並檢查是否造成其他問題。</p></div>
+<div class="tk"><div class="k">重點 04</div><h3>修正 Agent 不負責正式判定通過</h3><p><code>fix-applied</code> 只代表修正已成功套用；問題是否正式關閉，仍由檢核 Agent 重新檢查後決定。</p></div>
+</div>
+</section>
+<footer class="foot"><div class="wrap"><div class="in">
+<small>AGENT 03 // 修正完成後交回檢核</small>
+<div class="pager"><a onclick="go('eval')">← 02 · 檢核</a><a>回總覽 →</a></div>
+</div></div></footer>
+</div>
+</div>
+</main>
+<div aria-hidden="true" class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+<button aria-label="關閉" class="lb-close" onclick="closeLightbox(event)">×</button>
+<div class="lb-inner">
+<img alt="放大圖片" id="lightbox-img" src=""/>
+<div class="lb-cap" id="lightbox-cap"></div>
+</div>
+</div>
+<script>
+  const pages=['eval','fix'];
+  function go(id){
+    pages.forEach(p=>document.getElementById('page-'+p).classList.toggle('on',p===id));
+    document.querySelectorAll('[data-nav]').forEach(a=>a.classList.toggle('active',a.getAttribute('data-nav')===id));
+    document.getElementById('mpanel').classList.remove('open');
+    window.scrollTo({top:0,behavior:'instant'});
+    history.replaceState(null,'','#'+id);
+  }
+  function toggleMenu(){document.getElementById('mpanel').classList.toggle('open')}
+  function toggleTheme(){
+    const h=document.documentElement;
+    const dark=h.getAttribute('data-theme')==='dark';
+    h.setAttribute('data-theme',dark?'light':'dark');
+    document.querySelectorAll('#themebtn').forEach(b=>b.textContent=dark?'☾':'☀');
+  }
+  function setFS(diff){
+    document.documentElement.style.setProperty('--fs',diff);
+    const map={'-3':'fs-s','0':'fs-m','4':'fs-l'};
+    document.querySelectorAll('.ctrl .grp button').forEach(b=>b.classList.remove('on'));
+    const id=map[String(diff)];
+    if(id){const el=document.getElementById(id);if(el)el.classList.add('on')}
+  }
+  function openLightbox(src, caption){
+    const lightbox=document.getElementById('lightbox');
+    const image=document.getElementById('lightbox-img');
+    const label=document.getElementById('lightbox-cap');
+    if(!lightbox || !image) return;
+    image.src=src;
+    image.alt=caption || '放大圖片';
+    if(label) label.textContent=caption || '';
+    lightbox.classList.add('open');
+    lightbox.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+  }
+  function closeLightbox(event){
+    if(event){
+      const target=event.target;
+      const isBackdrop=target && target.id==='lightbox';
+      const isClose=target && target.classList && target.classList.contains('lb-close');
+      if(!isBackdrop && !isClose) return;
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const lightbox=document.getElementById('lightbox');
+    const image=document.getElementById('lightbox-img');
+    if(!lightbox) return;
+    lightbox.classList.remove('open');
+    lightbox.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+    if(image) image.removeAttribute('src');
+  }
+  document.addEventListener('keydown',function(event){
+    if(event.key==='Escape') closeLightbox();
+  });
+
+  function initImageCarousels(){
+    document.querySelectorAll('[data-carousel]').forEach(function(carousel){
+      const track=carousel.querySelector('.image-carousel__track');
+      const slides=Array.from(carousel.querySelectorAll('.image-carousel__slide'));
+      const previous=carousel.querySelector('.image-carousel__arrow--prev');
+      const nextButton=carousel.querySelector('.image-carousel__arrow--next');
+      const dots=Array.from(carousel.querySelectorAll('.image-carousel__dot'));
+      let currentIndex=0;
+
+      function showSlide(index){
+        if(!slides.length) return;
+        currentIndex=(index+slides.length)%slides.length;
+        track.style.transform='translateX(-'+(currentIndex*100)+'%)';
+        dots.forEach(function(dot,dotIndex){
+          const active=dotIndex===currentIndex;
+          dot.classList.toggle('is-active',active);
+          dot.setAttribute('aria-current',active?'true':'false');
+        });
+      }
+
+      if(previous){
+        previous.addEventListener('click',function(event){
+          event.preventDefault();
+          event.stopPropagation();
+          showSlide(currentIndex-1);
+        });
+      }
+
+      if(nextButton){
+        nextButton.addEventListener('click',function(event){
+          event.preventDefault();
+          event.stopPropagation();
+          showSlide(currentIndex+1);
+        });
+      }
+
+      dots.forEach(function(dot){
+        dot.addEventListener('click',function(event){
+          event.preventDefault();
+          event.stopPropagation();
+          showSlide(Number(dot.dataset.slideIndex||0));
+        });
+      });
+
+      slides.forEach(function(slide){
+        slide.addEventListener('click',function(){
+          const image=slide.querySelector('img');
+          if(image){
+            openLightbox(image.currentSrc||image.src,image.alt||'放大圖片');
+          }
+        });
+      });
+
+      carousel.addEventListener('keydown',function(event){
+        if(event.key==='ArrowLeft' && previous){
+          event.preventDefault();
+          showSlide(currentIndex-1);
+        }
+        if(event.key==='ArrowRight' && nextButton){
+          event.preventDefault();
+          showSlide(currentIndex+1);
+        }
+      });
+
+      showSlide(0);
+    });
+  }
+  initImageCarousels();
+
+  const h=(location.hash||'#eval').slice(1);
+  go(pages.includes(h)?h:'eval');
+</script>
+</body>
+</html>
