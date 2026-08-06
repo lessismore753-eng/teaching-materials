@@ -467,11 +467,11 @@
       <h1>Phase 1：建置與實作</h1>
       <p class="role">先從 Figma Library 抽出元件規格，整理成 MD／JSON 與 Main Guideline，再放進 Notion，完成 Design、Evaluation、Fix 三個 Agent 的設定；接著選一個真實任務，在同一階段內跑完一次完整實作。建置與實作合併在這一頁，一次把基礎建起來、也把流程跑通。</p>
       <div class="stations">
-        <a class="hg">PHASE 1 · 建置與實作</a><a class="soon" style="opacity:.45;cursor:default">PHASE 2 · Planning</a>
+        <a class="hg" onclick="document.getElementById('build').scrollIntoView({behavior:'smooth'})" style="cursor:pointer">建置</a><a onclick="document.getElementById('handson').scrollIntoView({behavior:'smooth'})" style="cursor:pointer">實作</a>
       </div>
     </div>
 
-    <section style="padding-top:20px">
+    <section id="build" style="padding-top:20px;scroll-margin-top:80px">
       <div class="io">
         <div><div class="k">Input · 輸入</div><div class="v">組別的 <code>Figma Library</code>、既有元件規範、設計原則與可使用的 AI 工具</div></div>
         <div><div class="k">Output · 輸出</div><div class="v">Main Guideline、Component MD／JSON、Notion 資料庫，以及可執行的三個 <code>Agent</code></div></div>
@@ -883,7 +883,7 @@ Issue 修正結果（每個 Issue 一列，含未修正項目）：
       </div>
     </section>
 
-    <section>
+    <section id="handson" style="scroll-margin-top:80px">
       <div class="rule" style="margin:8px 0 34px"></div>
       <div class="code mono" style="color:var(--accent)">PHASE 1 · 實作 / HANDS-ON</div>
       <h2 class="big" style="margin:8px 0 14px">實作：跑一次完整流程</h2>
