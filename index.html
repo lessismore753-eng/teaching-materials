@@ -375,12 +375,14 @@
   <div class="wrap">
     <div class="rule" style="margin:40px 0 22px"></div>
     <div class="lbl" style="color:var(--ink);font-size:18px;letter-spacing:.18em;margin-bottom:18px">UED New Workflow</div>
-    <div class="pipe" style="margin-top:0;grid-template-columns:1fr auto 1fr">
-      <div class="st g"><div class="t">Phase 1 · 建置與實作</div><div class="n">建立基礎並跑完一次流程</div><div class="d">整理元件規格、Main Guideline、Notion 資料庫與三個 Agent，接著用真實任務跑完 Design → Evaluation → Fix → 再檢核</div></div>
+    <div class="pipe" style="margin-top:0">
+      <div class="st g"><div class="t">Agent 01</div><div class="n">Design</div><div class="d">依規範產出設計稿，回報用了哪些元件</div></div>
       <div class="ar">→</div>
-      <div class="st" style="border-top:2px solid var(--accent)"><div class="t">Phase 2 · Planning</div><div class="n" style="color:var(--accent)">In the planning stages</div><div class="d">下一階段的規劃正在進行中</div></div>
+      <div class="st e"><div class="t">Agent 02</div><div class="n">Evaluation</div><div class="d">逐條比對規範，產出 pass / fail 清單</div></div>
+      <div class="ar">→</div>
+      <div class="st f"><div class="t">Agent 03</div><div class="n">Fix</div><div class="d">針對每一條 fail，依規則修正</div></div>
     </div>
-    <div class="loopnote">先完成規範與 Agent 設定，再在同一階段內跑完一次完整實作。實作卡住時，回頭修正文件、資料庫或 Agent 指令，而不是只手動修畫面。</div>
+    <div class="loopnote">↺ 迴圈：Fix 修完後交還 <b>Evaluation</b> 再檢查一次，直到通過或達重試上限 → 轉人工</div>
   </div>
 
   <section>
