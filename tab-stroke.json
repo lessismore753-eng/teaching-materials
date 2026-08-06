@@ -1,0 +1,331 @@
+{
+  "componentId": "undefined",
+  "canonicalName": "Tab-Stroke",
+  "anatomy": [
+    {
+      "name": "Tab-Stroke/Desktop",
+      "required": false,
+      "requiredWhen": "device=Desktop",
+      "evidenceIds": [
+        "ev-desktop-atom"
+      ]
+    },
+    {
+      "name": "Tab-Stroke/Mobile",
+      "required": false,
+      "requiredWhen": "device=Mobile",
+      "evidenceIds": [
+        "ev-mobile-atom"
+      ]
+    },
+    {
+      "name": "Icon",
+      "required": false,
+      "requiredWhen": "Show icon=true",
+      "evidenceIds": [
+        "ev-display-modes"
+      ]
+    },
+    {
+      "name": "Text",
+      "required": false,
+      "requiredWhen": "Show Text=true",
+      "evidenceIds": [
+        "ev-display-modes"
+      ]
+    },
+    {
+      "name": "Stroke",
+      "required": true,
+      "requiredWhen": "selected state",
+      "evidenceIds": [
+        "ev-anatomy-description"
+      ]
+    }
+  ],
+  "variantProperties": [
+    {
+      "componentSet": "Tab-Stroke",
+      "property": "Show icon",
+      "type": "boolean",
+      "values": [
+        true,
+        false
+      ],
+      "evidenceIds": [
+        "ev-display-modes"
+      ]
+    },
+    {
+      "componentSet": "Tab-Stroke",
+      "property": "Show Text",
+      "type": "boolean",
+      "values": [
+        true,
+        false
+      ],
+      "evidenceIds": [
+        "ev-display-modes"
+      ]
+    },
+    {
+      "componentSet": "Tab-Stroke/Desktop",
+      "property": "undefined",
+      "values": "undefined",
+      "evidenceIds": [
+        "ev-desktop-atom"
+      ]
+    },
+    {
+      "componentSet": "Tab-Stroke/Mobile",
+      "property": "undefined",
+      "values": "undefined",
+      "evidenceIds": [
+        "ev-mobile-atom"
+      ]
+    }
+  ],
+  "tokenRequirements": [
+    {
+      "target": "Text label",
+      "tokenType": "Text Style",
+      "requiredToken": "undefined",
+      "evidenceIds": [
+        "ev-undefined-text-style"
+      ]
+    },
+    {
+      "target": "Stroke",
+      "tokenType": "Color/Stroke",
+      "requiredToken": "undefined",
+      "evidenceIds": [
+        "ev-undefined-stroke-token"
+      ]
+    },
+    {
+      "target": "Spacing between Tab-Stroke items",
+      "tokenType": "Spacing",
+      "requiredToken": "undefined",
+      "evidenceIds": [
+        "ev-flexible-spacing"
+      ]
+    }
+  ],
+  "layoutConstraints": {
+    "deviceVariants": [
+      "Desktop",
+      "Mobile"
+    ],
+    "spacingBetweenItems": "flexible",
+    "displayModes": [
+      {
+        "name": "Icon＋文字",
+        "Show icon": true,
+        "Show Text": true,
+        "evidenceIds": [
+          "ev-display-modes"
+        ]
+      },
+      {
+        "name": "純文字",
+        "Show icon": false,
+        "Show Text": true,
+        "evidenceIds": [
+          "ev-display-modes"
+        ]
+      },
+      {
+        "name": "純 Icon",
+        "Show icon": true,
+        "Show Text": false,
+        "evidenceIds": [
+          "ev-display-modes"
+        ]
+      }
+    ],
+    "desktopSize": "undefined",
+    "mobileSize": "undefined",
+    "paddingTokens": "undefined",
+    "gapTokens": "undefined",
+    "strokeWidth": "undefined",
+    "strokePosition": "undefined"
+  },
+  "validationRules": [
+    {
+      "id": "tab-stroke-device-atom-selection",
+      "checkMethod": "component-name",
+      "assertion": "Desktop 尺寸使用 Tab-Stroke/Desktop；Mobile 尺寸使用 Tab-Stroke/Mobile。",
+      "evidenceIds": [
+        "ev-desktop-atom",
+        "ev-mobile-atom"
+      ]
+    },
+    {
+      "id": "tab-stroke-show-icon-show-text-combinations",
+      "checkMethod": "variant-value",
+      "assertion": "顯示模式由 Show icon 與 Show Text 控制；Icon＋文字、純文字、純 Icon 分別對應 true/true、false/true、true/false。",
+      "evidenceIds": [
+        "ev-display-modes"
+      ]
+    },
+    {
+      "id": "tab-stroke-selected-stroke",
+      "checkMethod": "node-structure",
+      "assertion": "選中狀態需以底線（stroke）標示。",
+      "evidenceIds": [
+        "ev-anatomy-description"
+      ]
+    },
+    {
+      "id": "tab-stroke-demo-copy-not-spec",
+      "checkMethod": "manual",
+      "assertion": "示意文字不得被檢核為固定 Tab 文案或業務分類規格。",
+      "evidenceIds": [
+        "ev-demo-copy"
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "conflicts-none-observed",
+      "status": "undefined",
+      "description": "此 Figma node 可見內容未呈現來源互相矛盾的規格。",
+      "evidenceIds": [
+        "ev-node-root"
+      ]
+    }
+  ],
+  "coverageGaps": [
+    {
+      "id": "gap-component-id",
+      "description": "componentId 未在此 Figma node 可見內容中定義。",
+      "evidenceIds": [
+        "ev-node-root"
+      ]
+    },
+    {
+      "id": "gap-state-set",
+      "description": "選中狀態以外的狀態集合未定義。",
+      "evidenceIds": [
+        "ev-anatomy-description"
+      ]
+    },
+    {
+      "id": "gap-token-requirements",
+      "description": "文字、Icon、底線、間距、色彩與 stroke 的正式 Token 未定義。",
+      "evidenceIds": [
+        "ev-undefined-text-style",
+        "ev-undefined-stroke-token",
+        "ev-flexible-spacing"
+      ]
+    },
+    {
+      "id": "gap-layout-values",
+      "description": "Desktop 與 Mobile 的尺寸、padding、gap、min width、max width 未定義。",
+      "evidenceIds": [
+        "ev-desktop-atom",
+        "ev-mobile-atom"
+      ]
+    },
+    {
+      "id": "gap-icon-rules",
+      "description": "Icon 的正式資產名稱、替換規則與可用清單未定義。",
+      "evidenceIds": [
+        "ev-display-modes"
+      ]
+    },
+    {
+      "id": "gap-accessibility",
+      "description": "鍵盤操作、Focus、ARIA、讀屏名稱與純 Icon 模式的輔助標示未定義於此元件 node。",
+      "evidenceIds": [
+        "ev-display-modes"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-node-root",
+      "sourceNodeId": "10743:21035",
+      "sourceNodeName": "Tab-Stroke Documentation",
+      "quote": "Tab-Stroke Documentation"
+    },
+    {
+      "id": "ev-title",
+      "sourceNodeId": "10743:21042",
+      "sourceNodeName": "Tab-Stroke",
+      "quote": "Tab-Stroke"
+    },
+    {
+      "id": "ev-purpose",
+      "sourceNodeId": "10743:21043",
+      "sourceNodeName": "Tab-Stroke",
+      "quote": "Tab-Stroke 之間的間距可彈性設定。提供 Icon＋文字、純文字、純 Icon 三種顯示模式，支援 Desktop 與 Mobile 兩種裝置尺寸。"
+    },
+    {
+      "id": "ev-anatomy-heading",
+      "sourceNodeId": "10743:21046",
+      "sourceNodeName": "元件結構 Anatomy",
+      "quote": "元件結構 Anatomy"
+    },
+    {
+      "id": "ev-anatomy-description",
+      "sourceNodeId": "10743:21047",
+      "sourceNodeName": "元件結構 Anatomy",
+      "quote": "Tab-Stroke 由原子元件 Tab-Stroke/Desktop 與 Tab-Stroke/Mobile 組成。使用底線（stroke）標示選中狀態，支援 Icon、文字、或兩者組合的顯示模式。"
+    },
+    {
+      "id": "ev-desktop-atom",
+      "sourceNodeId": "10743:21050",
+      "sourceNodeName": "Desktop — Tab-Stroke/Desktop",
+      "quote": "Desktop — Tab-Stroke/Desktop"
+    },
+    {
+      "id": "ev-mobile-atom",
+      "sourceNodeId": "10743:21080",
+      "sourceNodeName": "Mobile — Tab-Stroke/Mobile",
+      "quote": "Mobile — Tab-Stroke/Mobile"
+    },
+    {
+      "id": "ev-display-modes",
+      "sourceNodeId": "10743:21195",
+      "sourceNodeName": "顯示模式 Display Modes",
+      "quote": "Tab-Stroke 支援三種顯示組合：Icon＋文字、純文字、純 Icon；透過 Show icon 與 Show Text 布林屬性控制。"
+    },
+    {
+      "id": "ev-flexible-spacing",
+      "sourceNodeId": "10743:21043",
+      "sourceNodeName": "Tab-Stroke",
+      "quote": "Tab-Stroke 之間的間距可彈性設定。"
+    },
+    {
+      "id": "ev-navigation-usage",
+      "sourceNodeId": "10743:21319",
+      "sourceNodeName": "情境範例：網站主導航",
+      "quote": "在網站頂部使用 Tab-Stroke 作為主要導航，搭配 Icon＋文字模式讓使用者快速辨識各功能區域。底線風格適合與頁面內容區隔。"
+    },
+    {
+      "id": "ev-mobile-usage",
+      "sourceNodeId": "10743:21348",
+      "sourceNodeName": "情境範例：行動應用分頁",
+      "quote": "在行動裝置上使用純 Icon 模式的 Tab-Stroke，節省螢幕空間。適合底部導航或功能分頁場景。"
+    },
+    {
+      "id": "ev-demo-copy",
+      "sourceNodeId": "I10743:21324;6580:11905",
+      "sourceNodeName": "住宅火災保險",
+      "quote": "住宅火災保險；汽車保險；旅行平安險；基本資料；進階設定；通知偏好"
+    },
+    {
+      "id": "ev-undefined-text-style",
+      "sourceNodeId": "10743:21035",
+      "sourceNodeName": "Tab-Stroke Documentation",
+      "quote": "可見文字內容未提供 Text Style 名稱。"
+    },
+    {
+      "id": "ev-undefined-stroke-token",
+      "sourceNodeId": "10743:21035",
+      "sourceNodeName": "Tab-Stroke Documentation",
+      "quote": "可見文字內容未提供 stroke 色彩、寬度或 Token。"
+    }
+  ]
+}
