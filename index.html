@@ -327,8 +327,8 @@
   <nav class="topnav">
     <a data-nav="home" onclick="go('home')">Index</a>
     <a data-nav="principle" onclick="go('principle')">Principles</a>
-    <a data-nav="design" onclick="go('design')">Phase 1：建置</a>
-    <a data-nav="practice" onclick="go('practice')">Phase 2：實做</a>
+    <a data-nav="design" onclick="go('design')">Phase 1：建置與實作</a>
+    <a class="soon" title="In the planning stages" style="opacity:.4;cursor:default">Phase 2</a>
     <span class="div"></span>
     <span class="ctrl">
       <span class="grp" title="字級">
@@ -345,8 +345,8 @@
 <div class="mpanel" id="mpanel">
   <a onclick="go('home')">Index<span class="en">總覽</span></a>
   <a onclick="go('principle')">Principles<span class="en">建置原理</span></a>
-  <a onclick="go('design')">Phase 1：建置<span class="en">Setup</span></a>
-  <a onclick="go('practice')">Phase 2：實做<span class="en">Hands-on</span></a>
+  <a onclick="go('design')">Phase 1：建置與實作<span class="en">Build + Hands-on</span></a>
+  <a class="soon" style="opacity:.4;cursor:default">Phase 2<span class="en">In the planning stages</span></a>
   <div class="ctrl" style="margin-top:30px">
     <span class="grp"><button onclick="setFS(-3)">S</button><button onclick="setFS(0)" class="on">M</button><button onclick="setFS(4)">L</button></span>
     <button onclick="toggleTheme()">☾</button>
@@ -374,11 +374,11 @@
     <div class="rule" style="margin:40px 0 22px"></div>
     <div class="lbl" style="color:var(--ink);font-size:18px;letter-spacing:.18em;margin-bottom:18px">UED New Workflow</div>
     <div class="pipe" style="margin-top:0;grid-template-columns:1fr auto 1fr">
-      <div class="st g"><div class="t">Phase 1 · 建置</div><div class="n">建立基礎</div><div class="d">整理元件規格、Main Guideline、Notion 資料庫與三個 Agent</div></div>
+      <div class="st g"><div class="t">Phase 1 · 建置與實作</div><div class="n">建立基礎並跑完一次流程</div><div class="d">整理元件規格、Main Guideline、Notion 資料庫與三個 Agent，接著用真實任務跑完 Design → Evaluation → Fix → 再檢核</div></div>
       <div class="ar">→</div>
-      <div class="st" style="border-top:2px solid var(--accent)"><div class="t">Phase 2 · 實做</div><div class="n" style="color:var(--accent)">跑一次完整流程</div><div class="d">用真實任務驗證 Design → Evaluation → Fix → 再檢核</div></div>
+      <div class="st" style="border-top:2px solid var(--accent)"><div class="t">Phase 2 · Planning</div><div class="n" style="color:var(--accent)">In the planning stages</div><div class="d">下一階段的規劃正在進行中</div></div>
     </div>
-    <div class="loopnote">先完成規範與 Agent 設定，再進入實做階段。實做卡住時，回頭修正文件、資料庫或 Agent 指令，而不是只手動修畫面。</div>
+    <div class="loopnote">先完成規範與 Agent 設定，再在同一階段內跑完一次完整實作。實作卡住時，回頭修正文件、資料庫或 Agent 指令，而不是只手動修畫面。</div>
   </div>
 
   <section>
@@ -398,8 +398,8 @@
       <div class="lbl">目錄 · Contents</div>
       <div class="index">
         <a class="p" onclick="go('principle')"><span class="no">00</span><span class="ti">建置原理<span class="sub">三個 Agent 為什麼要隔離、判準為什麼要可勾選、迴圈為什麼要有上限。動手前必讀。</span></span><span class="go">→</span></a>
-        <a class="g" onclick="go('design')"><span class="no">01</span><span class="ti">Phase 1：建置<span class="sub">從 Figma 抽規格、建 Notion 資料庫、產出設計與交接報告。</span></span><span class="go">→</span></a>
-        <a class="f" onclick="go('practice')"><span class="no">02</span><span class="ti">Phase 2：實做<span class="sub">選一個真實任務，跑完 Design、Evaluation、Fix 與重新檢核，找出流程需要調整的地方。</span></span><span class="go">→</span></a>
+        <a class="g" onclick="go('design')"><span class="no">01</span><span class="ti">Phase 1：建置與實作<span class="sub">從 Figma 抽規格、建 Notion 資料庫、產出設計與交接報告，再選一個真實任務跑完 Design、Evaluation、Fix 與重新檢核。</span></span><span class="go">→</span></a>
+        <a style="cursor:default;opacity:.55"><span class="no">02</span><span class="ti">Phase 2<span class="sub">In the planning stages</span></span><span class="go"></span></a>
       </div>
     </div>
   </section>
@@ -454,7 +454,7 @@
 
     <footer class="foot"><div class="wrap"><div class="in">
       <small>PRINCIPLES</small>
-      <div class="pager"><a onclick="go('home')">← 總覽</a><a onclick="go('design')">Phase 1：建置 →</a></div>
+      <div class="pager"><a onclick="go('home')">← 總覽</a><a onclick="go('design')">Phase 1：建置與實作 →</a></div>
     </div></div></footer>
   </div>
 </div>
@@ -463,11 +463,11 @@
 <div class="page" id="page-design">
   <div class="wrap">
     <div class="aban g">
-      <div class="code mono">PHASE 1 / DESIGN SYSTEM &amp; AGENT SETUP</div>
-      <h1>Phase 1：建置</h1>
-      <p class="role">從 Figma Library 抽出元件規格，整理成 MD／JSON 與 Main Guideline，再放進 Notion，完成 Design、Evaluation、Fix 三個 Agent 的設定。這一頁的目標，是把整套基礎建設做完，讓團隊可以正式開始實作。</p>
+      <div class="code mono">PHASE 1 / BUILD &amp; HANDS-ON</div>
+      <h1>Phase 1：建置與實作</h1>
+      <p class="role">先從 Figma Library 抽出元件規格，整理成 MD／JSON 與 Main Guideline，再放進 Notion，完成 Design、Evaluation、Fix 三個 Agent 的設定；接著選一個真實任務，在同一階段內跑完一次完整實作。建置與實作合併在這一頁，一次把基礎建起來、也把流程跑通。</p>
       <div class="stations">
-        <a class="hg">PHASE 1 · 建置</a><a onclick="go('practice')">PHASE 2 · 實做</a>
+        <a class="hg">PHASE 1 · 建置與實作</a><a class="soon" style="opacity:.45;cursor:default">PHASE 2 · Planning</a>
       </div>
     </div>
 
@@ -478,7 +478,7 @@
       </div>
 
       <div class="lbl" style="margin-top:20px">建置步驟</div>
-      <p class="measure" style="margin-bottom:10px">前五步先把規範與資料庫準備好；第六到第八步設定三個 Agent；最後把內容放進 Notion，從一個實際任務開始跑完整流程。</p>
+      <p class="measure" style="margin-bottom:10px">前五步先把規範與資料庫準備好；第六到第八步設定三個 Agent；第九步把內容放進 Notion。完成建置後，接著往下進入實作。</p>
 
       <div class="flow">
 
@@ -875,57 +875,20 @@ Issue 修正結果（每個 Issue 一列，含未修正項目）：
           </ul>
         </div></div>
 
-        <div class="fstep"><div class="sn">10</div><div>
-          <h3>進入 Phase 2：實做</h3>
-          <p>不要先追求一次做到完整。先選一個範圍小、使用正式元件的真實需求，跑完一次 Design → Evaluation → Fix → 再 Evaluation。</p>
-          <ul class="clean">
-            <li>指定任務、Figma 檔案、Page、目標位置與不可修改範圍。</li>
-            <li>由 Design Agent 建立畫面並輸出執行表格。</li>
-            <li>由 Evaluation Agent 依 JSON 檢查並建立問題報告。</li>
-            <li>由 Fix Agent 修正可執行問題，再交回 Evaluation Agent 驗收。</li>
-            <li>紀錄卡住的地方，回頭修正文件、資料庫或 Agent 指令，而不是只手動修畫面。</li>
-          </ul>
-          <div class="call">
-            <div class="t">完成條件</div>
-            <p>當三個 Agent 能讀到同一套規範、在 Figma 留下可追蹤的紀錄，並能完成一次交接閉環，才代表這個組別的 Agent 流程已經具備可用的第一版。</p>
-          </div>
-          <p style="margin-top:20px">
-            <a onclick="go('practice')" style="display:inline-block;padding:10px 18px;border:1px solid var(--line);font-family:'Space Mono',monospace;font-size:12px;cursor:pointer">
-              進入 Phase 2：實做頁面 →
-            </a>
-          </p>
-        </div></div>
-
       </div>
     </section>
 
-    <footer class="foot"><div class="wrap"><div class="in">
-      <small>PHASE 1 // DESIGN SYSTEM SETUP // 10 STEPS</small>
-      <div class="pager"><a onclick="go('principle')">← 建置原理</a><a onclick="go('practice')">Phase 2：實做 →</a></div>
-    </div></div></footer>
-  </div>
-</div>
-
-
-<!-- ============ PRACTICE ============ -->
-<div class="page" id="page-practice">
-  <div class="wrap">
-    <div class="aban i">
-      <div class="code mono">PHASE 2 / HANDS-ON</div>
-      <h1>Phase 2：實做</h1>
-      <p class="role">用一個範圍小、可以控制的真實需求，跑完 Design、Evaluation、Fix 與重新檢核。這一頁不是要證明 Agent 一次就能做到完美，而是要找出流程、文件與權限哪裡還不完整。</p>
-      <div class="stations">
-        <a onclick="go('design')">PHASE 1 · 建置</a><a class="hf" style="background:var(--accent)">PHASE 2 · 實做</a>
-      </div>
-    </div>
-
-    <section style="padding-top:20px">
+    <section>
+      <div class="rule" style="margin:8px 0 34px"></div>
+      <div class="code mono" style="color:var(--accent)">PHASE 1 · 實作 / HANDS-ON</div>
+      <h2 class="big" style="margin:8px 0 14px">實作：跑一次完整流程</h2>
+      <p class="role" style="margin-bottom:0">建置完成後，接著用一個範圍小、可以控制的真實需求，跑完 Design、Evaluation、Fix 與重新檢核。這一段不是要證明 Agent 一次就能做到完美，而是要找出流程、文件與權限哪裡還不完整。</p>
       <div class="io">
         <div><div class="k">Input · 輸入</div><div class="v">一個範圍明確的<code>真實需求</code>、指定的 Figma 位置，以及已完成的 Notion 規範與三個 Agent</div></div>
         <div><div class="k">Output · 輸出</div><div class="v">一輪完整的 Agent 執行紀錄、設計／檢核／修正報告，以及需要回頭調整的<code>待辦清單</code></div></div>
       </div>
 
-      <div class="lbl" style="margin-top:20px">實做流程</div>
+      <div class="lbl" style="margin-top:20px">實作步驟</div>
       <p class="measure" style="margin-bottom:10px">第一次實作不要選太大的頁面。先確認整條線接得起來，再逐步增加頁面、狀態與元件數量。</p>
 
       <div class="flow">
@@ -1019,8 +982,8 @@ Issue 修正結果（每個 Issue 一列，含未修正項目）：
     </section>
 
     <footer class="foot"><div class="wrap"><div class="in">
-      <small>PHASE 2 // HANDS-ON PRACTICE</small>
-      <div class="pager"><a onclick="go('design')">← Phase 1：建置</a><a onclick="go('home')">回總覽 →</a></div>
+      <small>PHASE 1 // 建置與實作 // BUILD + HANDS-ON</small>
+      <div class="pager"><a onclick="go('principle')">← 建置原理</a><a onclick="go('home')">回總覽 →</a></div>
     </div></div></footer>
   </div>
 </div>
@@ -1028,7 +991,7 @@ Issue 修正結果（每個 Issue 一列，含未修正項目）：
 </main>
 
 <script>
-  const pages=['home','principle','design','practice'];
+  const pages=['home','principle','design'];
   function go(id){
     pages.forEach(p=>document.getElementById('page-'+p).classList.toggle('on',p===id));
     document.querySelectorAll('[data-nav]').forEach(a=>a.classList.toggle('active',a.getAttribute('data-nav')===id));
