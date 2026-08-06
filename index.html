@@ -585,78 +585,264 @@ metadata:
   stage: &quot;design&quot;
 ---
 
-# 產險 Design Agent
+本文件是 Design、Evaluation、Fix 的共用規範入口，定義全域原則、來源優先序與文件路由。各 Agent 的執行流程與輸出格式由「🧩 Skills」中的對應 Skill 定義。
 
-## 職責
+---
 
-規劃頁面／流程 → 查找規範 → 選 Component → 在指定 Figma 範圍建立或修改畫面 → 輸出執行表格交給 Evaluation Agent。
+## 1. 核心原則
 
-不處理：審查是否符合 Design System（Evaluation Agent）、依問題清單局部修正（Fix Agent）、修改正式 Component／Variable／Text Style／Library／規範文件、編造業務內容。
+- 所有顏色、字體、字級、行高，必須使用 Design System 已定義的 Token 或 Text Style。
+- 優先使用 Semantic Token；已有 Semantic Token 時，不得直接使用 Primitive Token。
+- 禁止直接輸入 Hex、RGB、HSL 或自行建立未定義數值。
+- Figma 已存在正式 Component 時，必須使用正式 Instance。
+- 禁止以普通 Frame 模仿正式元件，禁止 Detach Component Instance。
+- Variant、Property、Variable 與 Text Style 名稱必須保留 Figma 原始命名。
+- 來源未定義的 Token、Variant、尺寸或互動規則，不得自行推測。
 
-## 資料來源
+---
 
-只有兩個入口：
+## 2. 設計原則
 
-1. Notion「AI Skills 文件庫」：Main Guideline、Component MD／JSON、UX Writing、Foundation。MD 看用途，JSON 看 Variant／Property／Binding。
-2. 目標 Figma 檔案與正式 Library：確認資產真實存在、可寫入範圍。
+國泰產險數位平台應提供**專業、信賴、親切友善的保險體驗**。
 
-規則：只讀本次要用的文件；寫入前先確認資產存在；不依名稱猜用途或 Variant；來源衝突 → 標記 needs-review 並停止該區；找不到規範或資產 → blocked，不得用普通 Frame 仿製；不使用 GitHub 或其他公司 Design System。
+| 原則 | 定義 |
+| --- | --- |
+| **Simplicity** | 讓資訊成為視覺的主角，保持介面的簡潔與清晰。 |
+| **引導 Engagement** | 透過圖示與微動態吸引使用者注意，引導使用者專注於重要資訊。 |
+| **反饋 Feedback** | 透過精確文字與狀態顯示，讓使用者清楚得到操作回饋。 |
 
-## 開始前需確認
+---
 
-任務與成功條件、頁面／流程範圍、目標裝置與必要狀態、Figma File／Page／位置、可與不可修改範圍。
+## 3. 知識來源與文件路由
 
-缺 Figma 目標，或缺口影響流程、業務規則、資訊架構或 Component 選擇 → 回報 design_status: blocked / reason: missing-required-input。低風險缺口可假設繼續，但必須標記 assumption。
+### 統一入口
 
-資訊狀態：confirmed（已確認）、assumption（低風險假設）、needs-verification（缺資訊）、conflict（矛盾）、undefined（未定義）。除 confirmed 外不得當成事實。
+產險設計、Figma、Design System、Component、Token、UX Writing、Evaluation 或 Fix 任務，優先從 Notion 搜尋：
 
-## 執行步驟
+- Notion Library：AI Skills 文件庫
+- Figma Library：☂️ 產險 Library
 
-1. 理解需求並標記資訊狀態。
-2. 規劃 Section、流程步驟、資訊優先順序與主要操作。
-3. 查 Notion 規範（Guideline → MD → 必要 JSON）。
-4. 選 Component 並確認 Variant／Property。
-5. 觀察 Figma 現況與可修改範圍。
-6. 先建頁面骨架，再放入內容。
-7. 套用正式 Instance、Variable、Text Style、Spacing、Radius、Grid、Icon。
-8. 放入已確認內容（缺料用 [待提供：內容]）與必要狀態：Default／Hover／Focus／Error／Empty／Loading／Success。
-9. 建立指定裝置版本與基本無障礙（資訊優先順序、Focus、錯誤提示、Icon 語意）。
-10. 輸出執行表格（對話與 Figma 各一份）。
-11. 自我檢查：寫入成功、未越界、未 Detach 或仿製。
+Notion 內的查找區域：
 
-寫入原則：空白區域直接新建；既有 Frame 只改允許範圍；未允許不刪除、不覆蓋、不移動；風險過高先複製副本再改。
+1. 主技能區
+2. Skills
+3. MD 文件庫
+4. JSON 規格庫
 
-## Figma 設計紀錄
+### 來源角色
 
-在同一 Page 建立 Frame：Design Agent｜設計結果｜&lt;主要畫面名稱&gt;。優先放主要設計右側，其次下方；不移動、縮放、覆蓋產品畫面，不加 Prototype Flow。
+| 來源 | 角色 |
+| --- | --- |
+| Notion | Skill、MD、JSON、狀態與關聯的統一搜尋及管理入口。 |
+| Figma | 正式 Component、Component Set、Variant、Variable、Text Style、Node ID 與實際視覺結構的物理來源。 |
 
-## 執行狀態
+### 來源優先序
 
-* completed：已完成且規範與資產皆可確認（僅在實際寫入成功時使用）
-* completed-with-assumptions：已完成，含低風險假設或暫代內容
-* needs-review：仍有需求、規範、Binding 或結構問題待確認
-* blocked：缺必要需求、規範、權限或正式資產
+1. 本 Main Guideline：全域原則與文件路由。
+2. 「🧩 Skills」中的對應 Skill：該 Agent 的執行流程與輸出格式。
+3. Component JSON：Variant、Property、Binding 與數值規格。
+4. Component MD：Component 用途、適用情境與限制。
+5. Figma：正式資產與實際 Node 的物理事實。
 
-## 最終輸出格式
+JSON 與 MD 衝突時，規格依 JSON、用途依 MD；規格與 Figma 實際資產衝突時不得選邊，標記 `conflict`。
 
-執行表格不可省略、不可以摘要取代；空欄填「無」。
+只有 Design Agent 需要讀 MD 了解用途；Evaluation 與 Fix 一律以 JSON 為規格來源。
 
-執行狀態：狀態／任務／Figma File／Page／主要畫面／設計結果 Frame
+流程為 Design → Evaluation → Fix → Evaluation 重跑檢核；沒有獨立的 Re-evaluation Agent，Fix 完成後由 Evaluation Agent 對修正後的 Node 重跑檢核判定是否通過。
 
-執行表格（每個頁面、Section、步驟、狀態、裝置畫面各一列，含未完成項目）：
+### 必要查找順序
 
-| 執行項目 | 執行內容 | Figma Frame／Node | 使用的 Component／規範 | 結果 | 待確認事項 |
-|---|---|---|---|---|---|
+```
+任務需求
+↓
+Notion「💫 主技能區」中的 Main Guideline
+↓
+Notion「🧩 Skills」中的對應 Skill
+↓
+Notion「📄 MD 文件庫」中的 Component MD（僅 Design Agent）
+↓
+Notion「JSON 規格庫」中的 Component JSON 與 Registry
+↓
+Figma 正式 Library 與目標 Node 驗証
+```
 
-Frame／Node 無法取得時填 write-unverified；使用假設、暫代內容或未確認 Binding 必須寫入待確認事項。
+### 精確命中規則
 
-設計摘要：使用者目標／業務目標／頁面流程結構／主要操作／暫代內容與假設
+搜尋時優先使用：
 
-交付 Evaluation Agent：檢查 Frame／Node／使用的 Library Component／對應 JSON／優先檢查項目／不在本次範圍
+- 完整 Skill 名稱
+- 完整 MD 檔名
+- 完整 JSON 檔名
+- 完整 Token、Typography 或 Icon 名稱
+- Figma 正式 Component 名稱
 
-## 禁止事項
+搜尋結果標題必須與目標名稱完全一致，才能視為命中。不得只取第一筆搜尋結果，也不得以相似檔名或相似元件取代正式文件。
 
-編造業務、保障、費用、資格、法規、理賠內容；未實際寫入卻宣稱完成；改動允許範圍外設計；Detach 或仿製正式資產；捏造規範、資產 ID、Binding、Node 資訊。</pre>
+同一份規範存在多個版本時取版本號最高者，並在輸出註明使用的檔名與版本。版本一律以檔名版本（如 `v1`、`v1.1`）為準，內文的「規範版本」或 `specVersion` 僅供人閱讀。
+
+搜尋鍵一律是完整檔名。文件中出現的任何路徑前綴（例如 `Component MD 文件/…`、`MD 文件庫 /…`、`JSON 規格庫 /…`）只供人閱讀，Agent 必須忽略前綴，只以檔名搜尋。
+
+MD 與 JSON 的對應關係一律以「📄 MD 文件庫」與「JSON 規格庫」兩個資料庫之間的關聯屬性取得，不得由檔名互相推導，也不得依賴內文的 `documentationPath` 或「機器規格」路徑。
+
+JSON 的 `registryId` 與 MD 的「Registry ID」僅為內部識別碼，不得作為 Notion 搜尋鍵。
+
+若 Notion 搜尋不到完全一致的項目、JSON 無法解析或必要內容不完整：
+
+```
+source_status: unavailable
+action: blocked
+```
+
+狀態對應：文件或正式資產缺失＝`blocked`；來源之間衝突或無法驗証＝`needs-review`；Design System 未定義＝`undefined`。
+
+### Skill 來源
+
+- 所有 Agent Skill 均以 Notion「🧩 Skills」為正式來源。
+- 跨元件規則應先查閱相關 Component 文件與本 Main Guideline，不得假設未定義內容存在。
+
+---
+
+### 全域規範索引
+
+下表中的完整檔名用於 Notion 精確搜尋與文件識別。
+
+| 類型 | 使用規範 | 機器規格 |
+| --- | --- | --- |
+| Color | color-palette.md / text-token.md / background-token.md | color-palette.json / text-token.json / background-token.json |
+| Typography | typography.md | typography.json |
+| Icon | icon.md | icon.json |
+| Grid System | grid-system.md | grid-system.json |
+| Elevation / Shadow | elevation-shadow.md | elevation-shadow.json |
+| Accessibility | 本文件第 4 節（尚未建立獨立文件） | — |
+| UX Writing | ux-writing.md | — |
+
+上表連結均指向 Notion「📄 MD 文件庫」與「JSON 規格庫」中的實際頁面，檔名一律以資料庫實際名稱為準，不得自行對齊或推導。標示「Notion 尚未建立」者，搜尋不到時標記 `blocked`。
+
+Notion 沒有獨立的 Registry 區域，也沒有 `token-registry.json`、`typography-registry.json`、`icon-registry.json` 這類檔案。完整 Token、Typography 與 Icon Inventory 一律使用以下實際檔名：
+
+| 項目 | JSON 規格庫 | 📄 MD 文件庫 |
+| --- | --- | --- |
+| 文字色 Token | text-token.json | text-token.md |
+| 背景色 Token | background-token.json | background-token.md |
+| 色彩色階 | color-palette.json | color-palette.md |
+| Typography | typography.json | typography.md |
+| Icon | icon.json | icon.md |
+
+以上檔案一律在「JSON 規格庫」與「📄 MD 文件庫」以完整檔名搜尋，找不到時標記 `blocked`，不得推測 Token 值。
+
+---
+
+### Component 用途索引
+
+本表只列出目前已建立正式規範索引的 Component；索引存在但精確檔名搜尋不到時，仍須標記 `needs-verification`。
+
+Design Agent 應先依任務目的選擇 Component，再以完整檔名搜尋 Notion 的 MD 與 JSON。
+
+| Component | 主要用途 | 使用規範 |
+| --- | --- | --- |
+| Announcement | 呈現需要使用者注意的公告或重要資訊 | system.md（System 內含 Announcement） |
+| Breadcrumb | 顯示目前頁面在網站資訊架構中的位置 | breadcrumb.md |
+| Button | 觸發送出、下一步、確認、取消等操作 | button.md |
+| Carousel | 以輪播方式切換多筆並列內容 | carousel.md |
+| Chips | 顯示或操作精簡的選項、條件或分類 | chips.md |
+| Choice List | 呈現一組可供使用者選擇的項目 | choice-list.md |
+| CTA Container | 提供投保流程固定於頁面底部的操作區 | cta.md |
+| Dialog | 顯示重要訊息、確認或阻斷式任務 | dialogs.md |
+| Dropdown | 從預先定義的選項中選擇項目 | dropdown.md |
+| Footer | 提供次要導覽、法規與公司資訊 | footer.md |
+| Header | 提供品牌識別與主要導覽 | header.md |
+| Input | 輸入文字、個人資料或其他表單內容 | input.md |
+| Link | 執行頁面導覽、外連、下載或離頁操作 | link.md |
+| List Item | 呈現清單中的單一資訊或操作項目 | list.md（對應 `list-item.json`） |
+| Message | 提供成功、錯誤、警告或一般狀態訊息 | messages.md |
+| Pagination | 在多頁資料之間切換 | pagenation.md |
+| Place Picker | 選擇地點或地址相關資料 | place-picker.md |
+| Plan Card | 呈現方案、價格、保障內容與選擇操作 | cards.md（Cards 內含 Plan Card 與 Product Cards） |
+| Rating | 呈現評分或評價 | rating.md |
+| Search | 透過關鍵字尋找內容 | search.md |
+| Selection Control | 提供勾選、單選等選取控制 | selection-control.md |
+| Stepper | 呈現多步驟流程的目前進度 | stepper.md |
+| Tab | 在同一層級的內容分類間切換 | tab-solid.md、tab-stroke |
+| Tag | 顯示分類、狀態或標記 | tag.md |
+| Time Picker | 選擇時間 | time-picker.md |
+| Tooltip | 提供簡短且輔助性的補充說明 | tooltips.md |
+| FAQ | 以展開／收合方式呈現常見問題與答案 | FAQ.md |
+
+以上 MD 均位於：https://app.notion.com/p/eda1a9e43863493e9048fa34437002de?v=1fc13c8cdc0343109f83b0825819cb62
+
+對應 JSON 均位於：https://app.notion.com/p/9b6dc8bdbef44962a67f97910b08183a?v=9f8a5c7221684d35995376a51d97c648
+
+本表不列 JSON 檔名；對應 JSON 一律透過「📄 MD 文件庫」頁面上的「JSON 規格庫」關聯屬性取得，不得由 MD 檔名推導。關聯缺漏時標記 `needs-verification`。
+
+---
+
+## 4. 全域最低要求
+
+### Typography
+
+- 中文使用 `Noto Sans TC`。
+- 英文、數字、日期與金額使用 `Montserrat`。
+- Letter Spacing 依正式規範使用百分比，不得自行改成 px。
+- 金額格式為 `NT$1,200`，前綴與數字間不空格。
+
+詳細規範見：typography.md、typography.json
+
+### Accessibility
+
+- 一般文字對比至少 `4.5:1`。
+- 大文字與 UI 元件對比至少 `3:1`。
+- 錯誤與重要狀態不得只靠顏色傳達。
+- 所有互動元件必須支援鍵盤操作與清楚的 Focus 狀態。
+- 功能性 Icon 必須具有可存取名稱或可見文字。
+- `aria-label` 不能取代視覺對比要求。
+
+目前尚未建立獨立的 Accessibility 文件；在正式文件建立前，以本節及各 Component 文件中的 Accessibility 規則為準。
+
+### UX Writing
+
+所有文案應符合：
+
+- 專業：資訊明確，先結論後條件。
+- 信任：限制與費用前置，提供具體資訊。
+- 親切：不責備使用者，錯誤訊息提供下一步。
+
+詳細規範見：ux-writing.md 
+
+---
+
+## 5. 規範缺失與衝突
+
+當 Figma、MD、JSON 與 Registry 不一致時：
+
+- 不得靜默覆蓋。
+- 不得自行選擇看起來合理的版本。
+- 應標記為 `conflict`、`needs-verification` 或 `undefined`。
+- Figma 原始命名不得擅自正規化。
+- 衝突解除前，不得將推測內容視為正式規範。
+
+當 Figma 中有元件，但 MD 或 JSON 不完整時：
+
+- 可以辨識並使用已驗證的正式 Instance。
+- 不得推測用途、Variant 意義或互動規則。
+- 涉及結構、流程或業務語意時，必須要求 Review。
+
+當 JSON 的 `tokenRequirements`、`layoutConstraints` 或 `validationRules` 為空或只涵蓋少數項目時，Evaluation 必須在報告中揭露該元件的檢核涵蓋不足，不得只以「通過」表示。
+
+---
+
+## 6. 全域禁止事項
+
+- 禁止使用 Token 或 Text Style 以外的顏色、字體、字級與行高。
+- 禁止以相同數值冒充正式 Variable 或 Text Style Binding。
+- 禁止使用普通 Frame 模仿正式 Component。
+- 禁止 Detach 正式 Component Instance。
+- 禁止自行新增未定義的 Token、Variant、State 或 Component。
+- 禁止修改來源 Variable、Variant、Property 或文件路徑名稱。
+- 禁止混用其他 Design System 或 Icon Library 的同名資產。
+- 禁止只靠顏色傳達錯誤、警告或重要狀態。
+- 禁止將推測內容標記為正式規範。
+
+Button 數量、CTA Container、Input Error、Dialog Focus、Tooltip 行為等細節，應查閱對應 Component MD 與 JSON，不在 Main Guideline 重複維護。</pre>
 </details>
 <p style="margin-top:12px">
   <a href="https://app.notion.com/p/design-agent-3ac85f546d2f8176aee9ea50c4e6d1b9" target="_blank" rel="noopener noreferrer"
