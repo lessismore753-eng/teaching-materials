@@ -169,7 +169,14 @@
   .pipe .st .n{font-family:"Fraunces","Noto Serif TC",serif;font-size:27px;font-weight:400;margin-bottom:8px}
   .pipe .st .d{font-size:calc(13.5px + var(--fs)*1px);color:var(--ink-soft);font-weight:400;line-height:1.55}
   .pipe .st.g{border-top:2px solid var(--gen)} .pipe .st.g .n{color:var(--gen)}
+  .pipe .st.e{border-top:2px solid var(--eval)} .pipe .st.e .n{color:var(--eval)}
+  .pipe .st.f{border-top:2px solid var(--fix)} .pipe .st.f .n{color:var(--fix)}
   .pipe .ar{display:flex;align-items:center;justify-content:center;padding:0 16px;font-family:"Space Mono",monospace;color:var(--ink-faint);font-size:18px}
+  /* loop-back arrow: Fix → Evaluation */
+  .loopback{position:relative;height:52px;margin:2px 0 0}
+  .loopback .lb-track{position:absolute;left:16.66%;right:16.66%;top:0;height:26px;border:1px dashed var(--eval);border-top:none;border-radius:0 0 4px 4px}
+  .loopback .lb-head{position:absolute;left:16.66%;top:-5px;width:0;height:0;border:5px solid transparent;border-bottom-color:var(--eval);transform:translateX(-5px)}
+  .loopback .lb-tag{position:absolute;left:50%;top:16px;transform:translateX(-50%);background:var(--paper);padding:0 12px;font-family:"Space Mono",monospace;font-size:calc(12px + var(--fs)*1px);color:var(--eval);letter-spacing:.03em;white-space:nowrap}
   .loopnote{
     margin-top:16px;font-family:"Space Mono",monospace;font-size:calc(12.5px + var(--fs)*1px);
     color:var(--ink-soft);padding:14px 20px;border:1px dashed var(--line);background:var(--paper-2);
@@ -390,6 +397,25 @@
   .stepfig img{display:block;width:100%;height:auto;border:1px solid var(--line)}
   .stepfig figcaption{margin-top:8px;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.04em;color:var(--ink-faint)}
 
+  /* 可展開的範例瀏覽器 */
+  .example-viewer{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+  details.example{border:1px solid var(--line);background:var(--paper-2)}
+  details.example > summary{
+    list-style:none;cursor:pointer;padding:12px 18px;
+    font-family:"Space Mono",monospace;font-size:calc(12px + var(--fs)*1px);color:var(--ink);
+    display:flex;align-items:center;justify-content:space-between;gap:12px;user-select:none;
+  }
+  details.example > summary::-webkit-details-marker{display:none}
+  details.example > summary:hover{background:var(--hover)}
+  details.example > summary .ex-ic{color:var(--ink-faint);transition:transform .2s}
+  details.example[open] > summary .ex-ic{transform:rotate(90deg)}
+  details.example .ex-body{border-top:1px solid var(--line);max-height:440px;overflow:auto}
+  details.example .ex-body pre{
+    margin:0;padding:18px 20px;
+    font-family:"Space Mono",monospace;font-size:calc(12px + var(--fs)*1px);line-height:1.65;
+    color:var(--ink-soft);white-space:pre;tab-size:2;
+  }
+
   /* component 文件檢查表 */
   .ccheck{padding:30px 0 6px}
   .ctable-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--paper)}
@@ -441,6 +467,9 @@
     .menu-toggle{display:grid;place-items:center;font-family:"Space Mono",monospace;font-size:12px;background:none;border:1px solid var(--line);color:var(--ink);height:26px;padding:0 12px;cursor:pointer}
     .pipe{grid-template-columns:1fr}
     .pipe .ar{transform:rotate(90deg);padding:10px 0}
+    .loopback{height:auto;margin:14px 0 0}
+    .loopback .lb-track,.loopback .lb-head{display:none}
+    .loopback .lb-tag{position:static;transform:none;display:block;background:var(--paper-2);border:1px dashed var(--eval);padding:12px 16px;text-align:center;white-space:normal}
     .io{grid-template-columns:1fr}
     .io > div:first-child{border-right:none;border-bottom:1px solid var(--line)}
     .index a{grid-template-columns:50px 1fr auto;gap:16px}
@@ -464,7 +493,7 @@
   <nav class="topnav">
     <a data-nav="home" onclick="go('home')">Index</a>
     <a data-nav="principle" onclick="go('principle')">Principles</a>
-    <a data-nav="design" onclick="go('design')">Phase 1：建置與實作</a>
+    <a data-nav="design" onclick="go('design')">Phase 1：Design Workflow</a>
     <a title="In the planning stages" style="opacity:.4;cursor:default">Phase 2</a>
     <span class="div"></span>
     <span class="ctrl">
@@ -482,7 +511,7 @@
 <div class="mpanel" id="mpanel">
   <a onclick="go('home')">Index<span class="en">總覽</span></a>
   <a onclick="go('principle')">Principles<span class="en">建置原理</span></a>
-  <a onclick="go('design')">Phase 1：建置與實作<span class="en">Build + Hands-on</span></a>
+  <a onclick="go('design')">Phase 1：Design Workflow<span class="en">Build + Hands-on</span></a>
   <a style="opacity:.4;cursor:default">Phase 2<span class="en">In the planning stages</span></a>
   <div class="ctrl" style="margin-top:30px">
     <span class="grp"><button onclick="setFS(-3)">S</button><button onclick="setFS(0)" class="on">M</button><button onclick="setFS(4)">L</button></span>
@@ -497,25 +526,31 @@
   <div class="wrap">
     <div class="hero">
       <div class="kick">Design System · Agent Pipeline</div>
-      <h1 class="giant">讓 AI 自己<span class="l2">生成 · 檢查 · 修正</span></h1>
-      <p class="say">這份指南帶你建置一組互相接力的 AI Agent，把 Design System 從一份文件，變成一條會自我把關的工作流。</p>
+      <h1 class="giant">AI x Designer<span class="l2">New Workflow</span></h1>
+      <p class="say">整理UED共用的 Design Workflow，並教大家怎麼建置。</p>
       <div class="meta">
         <div>對象<span>UED 設計師</span></div>
         <div>工具<span>AI + Notion MCP + Figma MCP</span></div>
-        <div>產出<span>一套可執行的 Agent 流程</span></div>
       </div>
     </div>
   </div>
 
   <div class="wrap">
     <div class="rule" style="margin:40px 0 22px"></div>
-    <div class="lbl" style="color:var(--ink);font-size:18px;letter-spacing:.18em;margin-bottom:18px">UED New Workflow</div>
-    <div class="pipe" style="margin-top:0;grid-template-columns:1fr auto 1fr">
-      <div class="st g"><div class="t">Phase 1 · 建置與實作</div><div class="n">建立基礎並跑完一次流程</div><div class="d">整理元件規格、Guideline、Notion 資料庫與三個 Agent，接著用真實任務跑完三階段模型 Design → Evaluation → Fix 後，再進行修正。</div></div>
+    <div class="lbl" style="color:var(--ink);font-size:18px;letter-spacing:.18em;margin-bottom:18px">Phase 1 | Design Workflow</div>
+    <div class="pipe" style="margin-top:0">
+      <div class="st g"><div class="t">Agent 01</div><div class="n">Design</div><div class="d">依規範產出設計稿，回報用了哪些元件</div></div>
       <div class="ar">→</div>
-      <div class="st" style="border-top:2px solid var(--accent)"><div class="t">Phase 2 · Planning</div><div class="n" style="color:var(--accent)">In the planning stages</div><div class="d">下一階段的規劃正在進行中✨</div></div>
+      <div class="st e"><div class="t">Agent 02</div><div class="n">Evaluation</div><div class="d">逐條比對規範，產出 pass / fail 清單</div></div>
+      <div class="ar">→</div>
+      <div class="st f"><div class="t">Agent 03</div><div class="n">Fix</div><div class="d">針對每一條 fail，依規則修正</div></div>
     </div>
-    <div class="loopnote">#大膽下筆，小心修改</div>
+    <div class="loopback" role="img" aria-label="迴圈：Fix 修完交還 Evaluation 再檢查一次">
+      <div class="lb-track"></div>
+      <div class="lb-head"></div>
+      <div class="lb-tag">↺ Fix → Evaluation 再檢查一次</div>
+    </div>
+    <div class="loopnote">↺ 迴圈：Fix 修完後交還 <b>Evaluation</b> 再檢查一次，直到通過或達重試上限 → 轉人工</div>
   </div>
 
   <section>
@@ -523,8 +558,8 @@
       <div class="lbl">為什麼要做這件事</div>
       <div class="measure body-lg">
         <h2 class="big" style="margin-bottom:30px">AI 時代下的設計變革</h2>
-        <p>去年我們做了許多 AI 嘗試，打下了底子。今年，整個組織都在盤點如何把 AI 真正融入設計流程——而我們要交出的，不只是零星的嘗試，而是一套自己實際跑得動的 Design Workflow。</p>
-        <p>這套 workflow 的架構，是產險驗證過、方向可行的流程，也會是 UED 未來共用的工作方式。但它要靠你們親手建起來——因為你們是最清楚 AI Agent 建置細節的人，一個環節能不能成立、怎麼串才順，只有實際做的人最有體會。</p>
+        <p>當整個組織都在盤點如何把 AI 融入工作流程——我們更要有自己的 UED Workflow。</p>
+        <p>本教材中 workflow 的架構，是AI小組驗證過、方向可行的流程，也會是 UED 未來共用的工作方式。但它要靠你們親手建起來——因為你們是最清楚 AI Agent 建置細節的人，一個環節能不能成立、怎麼串才順，只有實際做的人最有體會。</p>
         <p>我們已經把每一步的做法、可能踩到的坑整理在這個網站上。過程中有任何問題，隨時來找我們。</p>
       </div>
     </div>
@@ -534,8 +569,8 @@
     <div class="wrap">
       <div class="lbl">目錄 · Contents</div>
       <div class="index">
-        <a class="p" onclick="go('principle')"><span class="no">00</span><span class="ti">建置原理<span class="sub">三個 Agent 為什麼要隔離、判準為什麼要可勾選、迴圈為什麼要有上限。動手前必讀。</span></span><span class="go">→</span></a>
-        <a class="g" onclick="go('design')"><span class="no">01</span><span class="ti">Phase 1：建置與實作<span class="sub">從 Figma 抽規格、建 Notion 資料庫、產出設計與交接報告，再選一個真實任務跑完 Design、Evaluation、Fix 與重新檢核。</span></span><span class="go">→</span></a>
+        <a class="p" onclick="go('principle')"><span class="no">00</span><span class="ti">建置原理<span class="sub">3個 Agent 為什麼要隔離、判準為什麼要可勾選、迴圈為什麼要有上限。動手前必讀。</span></span><span class="go">→</span></a>
+        <a class="g" onclick="go('design')"><span class="no">01</span><span class="ti">Phase 1：Design Workflow<span class="sub">從 Figma 抽規格、建 Notion 資料庫、產出設計與交接報告，再選一個真實任務跑完 Design、Evaluation、Fix 與重新檢核。</span></span><span class="go">→</span></a>
         <a style="cursor:default;opacity:.55"><span class="no">02</span><span class="ti">Phase 2<span class="sub">In the planning stages</span></span><span class="go"></span></a>
       </div>
     </div>
@@ -553,13 +588,13 @@
     <div class="aban">
       <div class="code mono" style="color:var(--accent)">// PRINCIPLES</div>
       <h1>建置原理</h1>
-      <p class="role">在動手做任何一個 Agent 之前，先理解這幾個原理 —— 它們會決定三個 Agent 串起來會順跑、還是會互相打架。</p>
+      <p class="role">在動手做任何一個 Agent 之前，先理解這幾個原理 —— 它們會決定3個 Agent 串起來會順跑、還是會互相打架。</p>
     </div>
 
     <section style="padding-top:36px">
       <div class="tool">
         <div class="h">Tool-agnostic</div>
-        <p>工具以 <b class="cc">Claude Code</b>、<b class="fg">Figma Agent</b>、<b class="cx">Codex</b> 這三個為主，差別只在介面與串接方式。</p>
+        <p>工具以 <b class="cc">Claude Code</b>、<b class="fg">Figma Agent</b>、<b class="cx">Codex</b> 這3個為主，差別只在介面與串接方式。</p>
       </div>
     </section>
 
@@ -569,21 +604,21 @@
           <div class="prin"><div class="pn serif">01</div><div>
             <h3>檢查者，要跟生成者隔離</h3>
             <p>Evaluation Agent 建議不讓他看到 Design Agent 的生成脈絡，如果它讀得到生成時的推理過程，它會順著那套邏輯點頭。例如生成者說「這裡留白是刻意的」，檢查者就會同意，於是審查失去意義。</p>
-            <div class="note">把兩個 Agent 拆成獨立的 Skill / 對話，別讓它們共用同一段上下文。檢查者的輸入只餵 Design 的產出結果與 Notion 上的規範就好。</div>
+            <div class="note">把2個 Agent 拆成獨立的 Skill / 對話，別讓它們共用同一段上下文。檢查者的輸入只餵 Design 的產出結果與 Notion 上的規範就好。</div>
           </div></div>
           <div class="prin"><div class="pn serif">02</div><div>
             <h3>迴圈要有上限，跑不過就轉人工</h3>
             <p>Evaluation → Fix → 再 Evaluation 是一個迴圈。沒有上限，它可能無限地修下去。重試上限的意義不是「湊到幾輪」，而是「什麼時候該讓人接手」。</p>
-            <div class="note">可以在迴圈裡設一個計數上限（例如 5-10 輪），另外加一條收斂判斷如：連續兩輪問題數沒下降就提前停。若已經確定 Loop 已經抵達極限，就把最後一份問題報告交給設計師人工處理，而不是讓 Agent 繼續空轉。</div>
+            <div class="note">可以在迴圈裡設一個計數上限（例如 5-10 輪），另外加一條收斂判斷如：連續2輪問題數沒下降就提前停。若已經確定 Loop 已經抵達極限，就把最後一份問題報告交給設計師人工處理，而不是讓 Agent 繼續空轉。</div>
           </div></div>
           <div class="prin"><div class="pn serif">03</div><div>
             <h3>哪些要跟 UED 一致，哪些可以自己決定</h3>
-            <p>三個 Agent 大部分的實作細節都可以彈性設置，例如用哪個工具、prompt 怎麼寫、Design System 內容、複雜頁面跑幾輪，你都可以自己決定。但規範必須放在 Notion 。</p>
+            <p>3個 Agent 大部分的實作細節都可以彈性設置，例如用哪個工具、prompt 怎麼寫、Design System 內容、複雜頁面跑幾輪，你都可以自己決定。但規範必須放在 Notion 。</p>
             <div class="note">Notion 上資料的擺放方式建議跟團隊一致，這樣未來技術更新的時候，workflow 的整合會更順暢。</div>
           </div></div>
           <div class="prin"><div class="pn serif">04</div><div>
-            <h3>三個 Agent 共通的一件事</h3>
-            <p>三個 Agent 都需要遵循相同的 Notion 資料庫、資料格式和輸出規範，以確保資訊能夠順利傳遞和整合。</p>
+            <h3>3個 Agent 共通的一件事</h3>
+            <p>3個 Agent 都需要遵循相同的 Notion 資料庫、資料格式和輸出規範，以確保資訊能夠順利傳遞和整合。</p>
           </div></div>
         </div>
       </div>
@@ -591,7 +626,7 @@
 
     <footer class="foot"><div class="wrap"><div class="in">
       <small>PRINCIPLES</small>
-      <div class="pager"><a onclick="go('home')">← 總覽</a><a onclick="go('design')">Phase 1：建置與實作 →</a></div>
+      <div class="pager"><a onclick="go('home')">← 總覽</a><a onclick="go('design')">Phase 1：Design Workflow →</a></div>
     </div></div></footer>
   </div>
 </div>
@@ -602,17 +637,20 @@
     <div class="aban g">
       <div class="code mono">PHASE 1 / BUILD &amp; HANDS-ON</div>
       <h2>Phase 1</h2>
-      <h1>建置與實作</h1>
-      <p class="role">先從各產品的 Figma Library 中整理出每個元件的規格，匯出成 MD、JSON 兩種檔案，並建立屬於自己產品的 Main Guideline。然後把這些資料放進 Notion，完成三個 Agent 的設定，再選一個真實任務，跑完一次完整實作。</p>
+      <h1>Design Workflow</h1>
+      <p class="role">此 Workflow 可以依照元件規範生成畫面 → 自我檢查 → 修正，本教材將帶你完成 3 個 Agent 的建置，並跑完一次完整實作。</p>
       <div class="stations">
         <a class="hg" onclick="document.getElementById('build').scrollIntoView({behavior:'smooth'})" style="cursor:pointer">建置</a><a onclick="document.getElementById('handson').scrollIntoView({behavior:'smooth'})" style="cursor:pointer">實作</a>
       </div>
     </div>
 
     <section id="build" style="padding-top:20px;scroll-margin-top:80px">
+      <div class="code mono" style="color:var(--accent)">建置 / BUILD</div>
+      <h2 class="big" style="margin:8px 0 14px">3 個 Agent 的建置</h2>
+      <p class="role" style="margin-bottom:0">先從各產品的 Figma Library 中整理出每個元件的規格，匯出成 MD、JSON 2 種檔案，並建立屬於自己產品的 Main Guideline。</p>
       <div class="io">
         <div><div class="k">Input · 輸入</div><div class="v">組別的 <code>Figma Library</code>、既有元件規範、設計原則與可使用的 AI 工具</div></div>
-        <div><div class="k">Output · 輸出</div><div class="v">Main Guideline、Component MD／JSON、Notion 資料庫，以及可執行的三個 <code>Agent</code></div></div>
+        <div><div class="k">Output · 輸出</div><div class="v">Main Guideline、Component MD／JSON、Notion 資料庫，以及可執行的 3 個 <code>Agent</code></div></div>
       </div>
 
       <div class="lbl" style="margin-top:20px">建置步驟</div>
@@ -623,11 +661,11 @@
         <div class="fstep"><div class="sn">01</div><div>
           <h3>建立自己組別的 AI Skills 文件庫</h3>
           <p>我們已建立好 Notion 資料庫的範本。大家可以直接複製，再依頁面下方的「移轉給其他組別時需修改清單」逐項調整，最後確認 Agent 已完全改讀自己組別的來源。</p>
-          <div class="guideline-cards" aria-label="AI Skills 文件庫移轉三步驟">
+          <div class="guideline-cards" aria-label="AI Skills 文件庫移轉3步驟">
             <article class="guideline-card">
               <div class="gc-top"><span class="gc-no">01</span><span class="gc-tag">Duplicate</span></div>
               <h4>複製 AI Skills 範本</h4>
-              <p>將「AI Skills 文件庫範本」複製到自己組別的 Notion，保留四個既有資料庫與其關聯結構。</p>
+              <p>將「AI Skills 文件庫範本」複製到自己組別的 Notion，保留 4 個既有資料庫與其關聯結構。</p>
               <ul class="gc-list">
                 <li>主技能區</li>
                 <li>Skills</li>
@@ -678,7 +716,7 @@
 <table class="ctable">
 <thead><tr><th class="cnum">#</th><th>項目</th><th>必要性</th><th>說明</th></tr></thead>
 <tbody>
-<tr><td class="cnum">1</td><td class="citem">ID 與定位</td><td><span class="cnec must">必要</span></td><td class="cdesc">唯一 ID、名稱、它是什麼（按鈕／輸入框／卡片）。ID 是三個 agent 交接報告時互相對得上的錨點，不能省。</td></tr>
+<tr><td class="cnum">1</td><td class="citem">ID 與定位</td><td><span class="cnec must">必要</span></td><td class="cdesc">唯一 ID、名稱、它是什麼（按鈕／輸入框／卡片）。ID 是 3 個 agent 交接報告時互相對得上的錨點，不能省。</td></tr>
 <tr><td class="cnum">2</td><td class="citem">視覺規格</td><td><span class="cnec must">必要</span></td><td class="cdesc">色票（用 token 名稱、非裸 hex）、尺寸、間距、圓角、字級字重、border、shadow —— 每項給明確數值或 token。</td></tr>
 <tr><td class="cnum">3</td><td class="citem">狀態</td><td><span class="cnec cond">視情況</span></td><td class="cdesc">default / hover / focus / active / disabled / error 各狀態的視覺差異。只要元件會互動就必填。</td></tr>
 <tr><td class="cnum">4</td><td class="citem">變體 Variants</td><td><span class="cnec cond">視情況</span></td><td class="cdesc">有哪些尺寸／樣式變體、各自改動哪些規格、哪些能組合哪些互斥。有變體才需要。</td></tr>
@@ -694,7 +732,7 @@
 
         <div class="fstep"><div class="sn">03</div><div>
           <h3>利用 Skill 產出產品元件的 MD 及 JSON 檔案</h3>
-          <p>套用以下文件建立 Skill，並建立產品元件的 MD 及 Json 檔案。接著把 Figma Agent 產出的元件文件交給轉檔 Skill，同時產出兩種格式：</p>
+          <p>套用以下文件建立 Skill，並建立產品元件的 MD 及 Json 檔案。接著把 Figma Agent 產出的元件文件交給轉檔 Skill，同時產出 2 種格式：</p>
           <ul class="clean">
             <li><strong>MD：</strong>提供設計師與 Design Agent 閱讀，說明元件用途、使用時機與限制。</li>
             <li><strong>JSON：</strong>提供 Evaluation 與 Fix Agent 讀取，保存 Variant、Property、Binding、尺寸與間距等可程式檢查的資料。</li>
@@ -704,12 +742,422 @@
             <a href="./design-system-component-spec-builder.md" download style="display:inline-block;padding:10px 18px;border:1px solid var(--line);font-family:'Space Mono',monospace;font-size:12px;color:inherit;text-decoration:none;cursor:pointer">
               ↓ 下載「轉檔 Skill」指令（.md）
             </a>
-            <a href="./tab-stroke.md" download style="display:inline-block;padding:10px 18px;border:1px solid var(--line);font-family:'Space Mono',monospace;font-size:12px;color:inherit;text-decoration:none;cursor:pointer">
-              ↓ 下載 MD 範例（Tab-Stroke）
-            </a>
-            <a href="./tab-stroke.json" download style="display:inline-block;padding:10px 18px;border:1px solid var(--line);font-family:'Space Mono',monospace;font-size:12px;color:inherit;text-decoration:none;cursor:pointer">
-              ↓ 下載 JSON 範例（Tab-Stroke）
-            </a>
+          </div>
+          <div class="example-viewer">
+            <details class="example">
+              <summary><span>展開 MD 範例（Tab-Stroke）</span><span class="ex-ic">→</span></summary>
+              <div class="ex-body"><pre># Tab-Stroke 使用規範
+
+## 元件目的
+
+`Tab-Stroke` 用於以底線（stroke）標示目前選中的分頁或導航項目。
+
+來源顯示 `Tab-Stroke` 支援 Desktop 與 Mobile 兩種裝置尺寸，並可呈現 Icon＋文字、純文字、純 Icon 三種顯示模式。
+
+## 適用情境
+
+- 網站頂部主要導航。
+- Desktop 上以 Icon＋文字模式協助使用者辨識功能區域。
+- Mobile 上以純 Icon 模式節省螢幕空間。
+- Mobile 上作為底部導航或功能分頁。
+- Mobile 上以純文字模式呈現功能分頁。
+
+## 元件選擇方式
+
+```text
+Desktop 尺寸
+→ Tab-Stroke/Desktop
+
+Mobile 尺寸
+→ Tab-Stroke/Mobile
+
+需要同時顯示圖示與文字
+→ Show icon = true；Show Text = true
+
+只顯示文字
+→ Show icon = false；Show Text = true
+
+只顯示圖示
+→ Show icon = true；Show Text = false
+```
+
+## 元件特有的使用與禁止規則
+
+### 使用規則
+
+- `Tab-Stroke` 由原子元件 `Tab-Stroke/Desktop` 與 `Tab-Stroke/Mobile` 組成。
+- 使用底線（stroke）標示選中狀態。
+- `Tab-Stroke` 之間的間距可彈性設定。
+- 顯示模式透過 `Show icon` 與 `Show Text` 布林屬性控制。
+- Icon＋文字模式用於完整展示。
+- 純文字模式需隱藏 Icon。
+- 純 Icon 模式需隱藏文字。
+- Desktop 網站主導航可使用 Icon＋文字模式。
+- Mobile 可使用純 Icon 模式節省螢幕空間。
+
+### 禁止規則
+
+- 不得將示意文案視為 Tab 名稱規格，例如「住宅火災保險」、「汽車保險」、「旅行平安險」、「基本資料」、「進階設定」、「通知偏好」。
+- 不得自行新增 Figma 未定義的顯示模式。
+- 不得自行推測 `Show icon` 與 `Show Text` 以外的 Variant Property。
+- 不得自行推測固定間距、尺寸、padding、gap、stroke 寬度或色彩 Token。
+- 不得將 Desktop 與 Mobile 原子元件互換使用。
+
+## 衝突與尚未定義事項
+
+### 衝突
+
+- undefined
+
+### 尚未定義
+
+- `componentId` 未在此 Figma node 可見內容中定義。
+- `Tab-Stroke` 的正式分類未在此 Figma node 可見內容中定義。
+- 選中狀態以外的狀態集合未定義。
+- `Show icon` 與 `Show Text` 的正式 Figma Property 型別除布林敘述外未提供機器值。
+- Icon 的正式資產名稱、替換規則與可用清單未定義。
+- Text label 的字級、字重、行高與 Text Style 未定義。
+- Stroke 的色彩、寬度、位置與 Token 未定義。
+- Desktop 與 Mobile 的完整尺寸、padding、gap、min width、max width 未定義。
+- 多個 Tab 之間「間距可彈性設定」的可用範圍未定義。
+- 鍵盤操作、Focus、ARIA 與讀屏名稱未定義於此元件 node。
+- 純 Icon 模式是否必須提供 tooltip 或可見輔助文字未定義於此元件 node。
+</pre></div>
+            </details>
+            <details class="example">
+              <summary><span>展開 JSON 範例（Tab-Stroke）</span><span class="ex-ic">→</span></summary>
+              <div class="ex-body"><pre>{
+  "componentId": "undefined",
+  "canonicalName": "Tab-Stroke",
+  "anatomy": [
+    {
+      "name": "Tab-Stroke/Desktop",
+      "required": false,
+      "requiredWhen": "device=Desktop",
+      "evidenceIds": [
+        "ev-desktop-atom"
+      ]
+    },
+    {
+      "name": "Tab-Stroke/Mobile",
+      "required": false,
+      "requiredWhen": "device=Mobile",
+      "evidenceIds": [
+        "ev-mobile-atom"
+      ]
+    },
+    {
+      "name": "Icon",
+      "required": false,
+      "requiredWhen": "Show icon=true",
+      "evidenceIds": [
+        "ev-display-modes"
+      ]
+    },
+    {
+      "name": "Text",
+      "required": false,
+      "requiredWhen": "Show Text=true",
+      "evidenceIds": [
+        "ev-display-modes"
+      ]
+    },
+    {
+      "name": "Stroke",
+      "required": true,
+      "requiredWhen": "selected state",
+      "evidenceIds": [
+        "ev-anatomy-description"
+      ]
+    }
+  ],
+  "variantProperties": [
+    {
+      "componentSet": "Tab-Stroke",
+      "property": "Show icon",
+      "type": "boolean",
+      "values": [
+        true,
+        false
+      ],
+      "evidenceIds": [
+        "ev-display-modes"
+      ]
+    },
+    {
+      "componentSet": "Tab-Stroke",
+      "property": "Show Text",
+      "type": "boolean",
+      "values": [
+        true,
+        false
+      ],
+      "evidenceIds": [
+        "ev-display-modes"
+      ]
+    },
+    {
+      "componentSet": "Tab-Stroke/Desktop",
+      "property": "undefined",
+      "values": "undefined",
+      "evidenceIds": [
+        "ev-desktop-atom"
+      ]
+    },
+    {
+      "componentSet": "Tab-Stroke/Mobile",
+      "property": "undefined",
+      "values": "undefined",
+      "evidenceIds": [
+        "ev-mobile-atom"
+      ]
+    }
+  ],
+  "tokenRequirements": [
+    {
+      "target": "Text label",
+      "tokenType": "Text Style",
+      "requiredToken": "undefined",
+      "evidenceIds": [
+        "ev-undefined-text-style"
+      ]
+    },
+    {
+      "target": "Stroke",
+      "tokenType": "Color/Stroke",
+      "requiredToken": "undefined",
+      "evidenceIds": [
+        "ev-undefined-stroke-token"
+      ]
+    },
+    {
+      "target": "Spacing between Tab-Stroke items",
+      "tokenType": "Spacing",
+      "requiredToken": "undefined",
+      "evidenceIds": [
+        "ev-flexible-spacing"
+      ]
+    }
+  ],
+  "layoutConstraints": {
+    "deviceVariants": [
+      "Desktop",
+      "Mobile"
+    ],
+    "spacingBetweenItems": "flexible",
+    "displayModes": [
+      {
+        "name": "Icon＋文字",
+        "Show icon": true,
+        "Show Text": true,
+        "evidenceIds": [
+          "ev-display-modes"
+        ]
+      },
+      {
+        "name": "純文字",
+        "Show icon": false,
+        "Show Text": true,
+        "evidenceIds": [
+          "ev-display-modes"
+        ]
+      },
+      {
+        "name": "純 Icon",
+        "Show icon": true,
+        "Show Text": false,
+        "evidenceIds": [
+          "ev-display-modes"
+        ]
+      }
+    ],
+    "desktopSize": "undefined",
+    "mobileSize": "undefined",
+    "paddingTokens": "undefined",
+    "gapTokens": "undefined",
+    "strokeWidth": "undefined",
+    "strokePosition": "undefined"
+  },
+  "validationRules": [
+    {
+      "id": "tab-stroke-device-atom-selection",
+      "checkMethod": "component-name",
+      "assertion": "Desktop 尺寸使用 Tab-Stroke/Desktop；Mobile 尺寸使用 Tab-Stroke/Mobile。",
+      "evidenceIds": [
+        "ev-desktop-atom",
+        "ev-mobile-atom"
+      ]
+    },
+    {
+      "id": "tab-stroke-show-icon-show-text-combinations",
+      "checkMethod": "variant-value",
+      "assertion": "顯示模式由 Show icon 與 Show Text 控制；Icon＋文字、純文字、純 Icon 分別對應 true/true、false/true、true/false。",
+      "evidenceIds": [
+        "ev-display-modes"
+      ]
+    },
+    {
+      "id": "tab-stroke-selected-stroke",
+      "checkMethod": "node-structure",
+      "assertion": "選中狀態需以底線（stroke）標示。",
+      "evidenceIds": [
+        "ev-anatomy-description"
+      ]
+    },
+    {
+      "id": "tab-stroke-demo-copy-not-spec",
+      "checkMethod": "manual",
+      "assertion": "示意文字不得被檢核為固定 Tab 文案或業務分類規格。",
+      "evidenceIds": [
+        "ev-demo-copy"
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "conflicts-none-observed",
+      "status": "undefined",
+      "description": "此 Figma node 可見內容未呈現來源互相矛盾的規格。",
+      "evidenceIds": [
+        "ev-node-root"
+      ]
+    }
+  ],
+  "coverageGaps": [
+    {
+      "id": "gap-component-id",
+      "description": "componentId 未在此 Figma node 可見內容中定義。",
+      "evidenceIds": [
+        "ev-node-root"
+      ]
+    },
+    {
+      "id": "gap-state-set",
+      "description": "選中狀態以外的狀態集合未定義。",
+      "evidenceIds": [
+        "ev-anatomy-description"
+      ]
+    },
+    {
+      "id": "gap-token-requirements",
+      "description": "文字、Icon、底線、間距、色彩與 stroke 的正式 Token 未定義。",
+      "evidenceIds": [
+        "ev-undefined-text-style",
+        "ev-undefined-stroke-token",
+        "ev-flexible-spacing"
+      ]
+    },
+    {
+      "id": "gap-layout-values",
+      "description": "Desktop 與 Mobile 的尺寸、padding、gap、min width、max width 未定義。",
+      "evidenceIds": [
+        "ev-desktop-atom",
+        "ev-mobile-atom"
+      ]
+    },
+    {
+      "id": "gap-icon-rules",
+      "description": "Icon 的正式資產名稱、替換規則與可用清單未定義。",
+      "evidenceIds": [
+        "ev-display-modes"
+      ]
+    },
+    {
+      "id": "gap-accessibility",
+      "description": "鍵盤操作、Focus、ARIA、讀屏名稱與純 Icon 模式的輔助標示未定義於此元件 node。",
+      "evidenceIds": [
+        "ev-display-modes"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-node-root",
+      "sourceNodeId": "10743:21035",
+      "sourceNodeName": "Tab-Stroke Documentation",
+      "quote": "Tab-Stroke Documentation"
+    },
+    {
+      "id": "ev-title",
+      "sourceNodeId": "10743:21042",
+      "sourceNodeName": "Tab-Stroke",
+      "quote": "Tab-Stroke"
+    },
+    {
+      "id": "ev-purpose",
+      "sourceNodeId": "10743:21043",
+      "sourceNodeName": "Tab-Stroke",
+      "quote": "Tab-Stroke 之間的間距可彈性設定。提供 Icon＋文字、純文字、純 Icon 三種顯示模式，支援 Desktop 與 Mobile 兩種裝置尺寸。"
+    },
+    {
+      "id": "ev-anatomy-heading",
+      "sourceNodeId": "10743:21046",
+      "sourceNodeName": "元件結構 Anatomy",
+      "quote": "元件結構 Anatomy"
+    },
+    {
+      "id": "ev-anatomy-description",
+      "sourceNodeId": "10743:21047",
+      "sourceNodeName": "元件結構 Anatomy",
+      "quote": "Tab-Stroke 由原子元件 Tab-Stroke/Desktop 與 Tab-Stroke/Mobile 組成。使用底線（stroke）標示選中狀態，支援 Icon、文字、或兩者組合的顯示模式。"
+    },
+    {
+      "id": "ev-desktop-atom",
+      "sourceNodeId": "10743:21050",
+      "sourceNodeName": "Desktop — Tab-Stroke/Desktop",
+      "quote": "Desktop — Tab-Stroke/Desktop"
+    },
+    {
+      "id": "ev-mobile-atom",
+      "sourceNodeId": "10743:21080",
+      "sourceNodeName": "Mobile — Tab-Stroke/Mobile",
+      "quote": "Mobile — Tab-Stroke/Mobile"
+    },
+    {
+      "id": "ev-display-modes",
+      "sourceNodeId": "10743:21195",
+      "sourceNodeName": "顯示模式 Display Modes",
+      "quote": "Tab-Stroke 支援三種顯示組合：Icon＋文字、純文字、純 Icon；透過 Show icon 與 Show Text 布林屬性控制。"
+    },
+    {
+      "id": "ev-flexible-spacing",
+      "sourceNodeId": "10743:21043",
+      "sourceNodeName": "Tab-Stroke",
+      "quote": "Tab-Stroke 之間的間距可彈性設定。"
+    },
+    {
+      "id": "ev-navigation-usage",
+      "sourceNodeId": "10743:21319",
+      "sourceNodeName": "情境範例：網站主導航",
+      "quote": "在網站頂部使用 Tab-Stroke 作為主要導航，搭配 Icon＋文字模式讓使用者快速辨識各功能區域。底線風格適合與頁面內容區隔。"
+    },
+    {
+      "id": "ev-mobile-usage",
+      "sourceNodeId": "10743:21348",
+      "sourceNodeName": "情境範例：行動應用分頁",
+      "quote": "在行動裝置上使用純 Icon 模式的 Tab-Stroke，節省螢幕空間。適合底部導航或功能分頁場景。"
+    },
+    {
+      "id": "ev-demo-copy",
+      "sourceNodeId": "I10743:21324;6580:11905",
+      "sourceNodeName": "住宅火災保險",
+      "quote": "住宅火災保險；汽車保險；旅行平安險；基本資料；進階設定；通知偏好"
+    },
+    {
+      "id": "ev-undefined-text-style",
+      "sourceNodeId": "10743:21035",
+      "sourceNodeName": "Tab-Stroke Documentation",
+      "quote": "可見文字內容未提供 Text Style 名稱。"
+    },
+    {
+      "id": "ev-undefined-stroke-token",
+      "sourceNodeId": "10743:21035",
+      "sourceNodeName": "Tab-Stroke Documentation",
+      "quote": "可見文字內容未提供 stroke 色彩、寬度或 Token。"
+    }
+  ]
+}</pre></div>
+            </details>
           </div>
         </div></div>
 
@@ -738,11 +1186,11 @@
 
     <section id="handson" style="scroll-margin-top:80px">
       <div class="rule" style="margin:8px 0 34px"></div>
-      <div class="code mono" style="color:var(--accent)">PHASE 1 · 實作 / HANDS-ON</div>
-      <h2 class="big" style="margin:8px 0 14px">實作：跑一次完整流程</h2>
+      <div class="code mono" style="color:var(--accent)">實作 / HANDS-ON</div>
+      <h2 class="big" style="margin:8px 0 14px">跑一次完整流程</h2>
       <p class="role" style="margin-bottom:0">建置完成後，可嘗試用一個需求，跑完 Design、Evaluation、Fix 與重新檢核這個流程。利用這段實作找出流程、文件與權限哪裡還不完整。</p>
       <div class="io">
-        <div><div class="k">Input · 輸入</div><div class="v">一個範圍明確的<code>真實需求</code>、指定的 Figma 位置，以及已完成的 Notion 規範與三個 Agent</div></div>
+        <div><div class="k">Input · 輸入</div><div class="v">一個範圍明確的<code>真實需求</code>、指定的 Figma 位置，以及已完成的 Notion 規範與 3 個 Agent</div></div>
         <div><div class="k">Output · 輸出</div><div class="v">一輪完整的 Agent 執行紀錄、設計／檢核／修正報告，以及需要回頭調整的<code>待辦清單</code></div></div>
       </div>
 
@@ -761,36 +1209,34 @@
         </div></div>
 
         <div class="fstep"><div class="sn">02</div><div>
-          <h3>把任務邊界寫清楚</h3>
-          <p>在執行前提供任務、成功條件、Figma File、Page、目標位置、裝置、必要狀態，以及可修改與不可修改範圍。</p>
-          <div class="call">
-            <div class="t">建議輸入</div>
-            <p>「請在指定 Figma Page 的空白區域建立畫面。只使用 Notion 文件庫中的規範與正式 Library，不要移動或修改既有畫面；完成後輸出執行表格。」</p>
-          </div>
-        </div></div>
-
-        <div class="fstep"><div class="sn">03</div><div>
           <h3>執行 Design Agent</h3>
           <p>負責依設計目的、目標裝置與需求建立畫面，並留下可供後續檢查的設計結果。</p>
-          <div class="action-cards cols-2" aria-label="執行 Design Agent 的兩個步驟">
+          <div class="action-cards cols-3" aria-label="執行 Design Agent 的 3 個步驟">
             <article class="action-card">
               <div class="ac-top"><span class="ac-no">01</span><span class="ac-tag">Notion Link</span></div>
               <h4>貼上 Design Agent 連結</h4>
               <p>將 Design Agent 的 Notion 連結貼到 AI 對話框，讓 AI 讀取 Agent 的職責、執行流程與輸出格式。</p>
+              <div class="prompt-example">Prompt 範例：https://app.notion.com/p/AI-Skills-e66396cc28ac40168318b07d995cf95b?source=copy_link</div>
             </article>
             <article class="action-card">
               <div class="ac-top"><span class="ac-no">02</span><span class="ac-tag">Design Prompt</span></div>
               <h4>輸入完整的設計需求</h4>
               <p>Prompt 至少要包含設計目的、目標裝置與設計需求；有指定 Figma 位置時，也要一併提供。</p>
-              <div class="prompt-example">例如：幫我設計一個電腦版火災保險網頁，包含多個方案比較。</div>
+              <div class="prompt-example">Prompt 範例：幫我設計一個電腦版火災保險網頁，包含多個方案比較。</div>
+            </article>
+            <article class="action-card">
+              <div class="ac-top"><span class="ac-no">03</span><span class="ac-tag">Task Scope</span></div>
+              <h4>提供任務邊界</h4>
+              <p>在執行前提供任務、成功條件、Figma File、Page、目標位置、裝置、必要狀態，以及可修改與不可修改範圍。</p>
+              <div class="prompt-example">Prompt 範例：「請在指定 Figma Page 的空白區域建立畫面。只使用 Notion 文件庫中的規範與正式 Library，不要移動或修改既有畫面；完成後輸出執行表格。」</div>
             </article>
           </div>
         </div></div>
 
-        <div class="fstep"><div class="sn">04</div><div>
+        <div class="fstep"><div class="sn">03</div><div>
           <h3>執行 Evaluation Agent</h3>
           <p>負責依文件庫規範檢查 Design Agent 的產出，指出不合規的位置、檢查依據與待確認事項。</p>
-          <div class="action-cards cols-3" aria-label="執行 Evaluation Agent 的三個步驟">
+          <div class="action-cards cols-3" aria-label="執行 Evaluation Agent 的 3 個步驟">
             <article class="action-card">
               <div class="ac-top"><span class="ac-no">01</span><span class="ac-tag">New Context</span></div>
               <h4>開啟另一個 AI 軟體或對話框</h4>
@@ -805,15 +1251,15 @@
               <div class="ac-top"><span class="ac-no">03</span><span class="ac-tag">Run Check</span></div>
               <h4>輸入檢查 Prompt</h4>
               <p>將 Evaluation Agent 的 Notion 連結貼到新的 AI 對話框，檢查設計稿。</p>
-              <div class="prompt-example">例如：執行檢查。</div>
+              <div class="prompt-example">Prompt 範例：執行檢查。</div>
             </article>
           </div>
         </div></div>
 
-        <div class="fstep"><div class="sn">05</div><div>
+        <div class="fstep"><div class="sn">04</div><div>
           <h3>執行 Fix Agent</h3>
           <p>負責依已確認的 Evaluation 結果修改指定問題，不重新設計未被點名的區域。</p>
-          <div class="action-cards cols-3" aria-label="執行 Fix Agent 的三個步驟">
+          <div class="action-cards cols-3" aria-label="執行 Fix Agent 的 3 個步驟">
             <article class="action-card">
               <div class="ac-top"><span class="ac-no">01</span><span class="ac-tag">Review Issues</span></div>
               <h4>確認要交給 Fix 的內容</h4>
@@ -828,12 +1274,12 @@
               <div class="ac-top"><span class="ac-no">03</span><span class="ac-tag">Run Fix</span></div>
               <h4>輸入修改 Prompt</h4>
               <p>將 Fix Agent 的 Notion 連結貼到 AI 對話框，並輸入修改需求。</p>
-              <div class="prompt-example">例如：執行修改。</div>
+              <div class="prompt-example">Prompt 範例：執行修改。</div>
             </article>
           </div>
         </div></div>
 
-        <div class="fstep"><div class="sn">06</div><div>
+        <div class="fstep"><div class="sn">05</div><div>
           <h3>重新檢核並確認結果</h3>
           <p>修改完成後，交回同一個 Evaluation Agent，依原本的 JSON 與驗收條件重新檢查。</p>
           <ul class="clean">
@@ -843,7 +1289,7 @@
           </ul>
         </div></div>
 
-        <div class="fstep"><div class="sn">07</div><div>
+        <div class="fstep"><div class="sn">06</div><div>
           <h3>整理卡點，回頭修正基礎資料</h3>
           <p>實作中遇到的問題，可以通過修正 MD/Json 檔案來解決。先判斷卡點來自那個流程，再修正對應來源：</p>
           <div class="ctable-wrap" style="margin-top:24px">
@@ -853,7 +1299,7 @@
                 <tr><td class="citem">找不到規範或元件</td><td class="cdesc">Main Guideline、Notion 資料位置、文件命名</td></tr>
                 <tr><td class="citem">數值無法檢查</td><td class="cdesc">Component JSON 的欄位與完整度</td></tr>
                 <tr><td class="citem">Agent 修改範圍過大</td><td class="cdesc">Agent 職責、禁止事項、可修改範圍</td></tr>
-                <tr><td class="citem">報告無法交接</td><td class="cdesc">三個 Agent 的輸出欄位與 ID 系統</td></tr>
+                <tr><td class="citem">報告無法交接</td><td class="cdesc">3 個 Agent 的輸出欄位與 ID 系統</td></tr>
                 <tr><td class="citem">MCP 無法讀寫</td><td class="cdesc">工具權限、連線方式與 Figma／Notion 存取設定</td></tr>
               </tbody>
             </table>
@@ -864,7 +1310,7 @@
       <div class="lbl" style="margin-top:44px">第一版完成條件</div>
       <div class="check">
         <div class="h">Practice checklist</div>
-        <div class="ci"><div class="bx"></div><code>01</code><span>檢查對話框中，三個 Agent 是否都能讀到同一套 Notion 規範</span></div>
+        <div class="ci"><div class="bx"></div><code>01</code><span>檢查對話框中，3 個 Agent 是否都能讀到同一套 Notion 規範</span></div>
         <div class="ci"><div class="bx"></div><code>02</code><span>Design Agent 能在指定位置建立畫面與執行表格</span></div>
         <div class="ci"><div class="bx"></div><code>03</code><span>Evaluation Agent 能提出有 Node ID 與 JSON 證據的問題</span></div>
         <div class="ci"><div class="bx"></div><code>04</code><span>Fix Agent 能做最小修正並留下修改前後紀錄</span></div>
@@ -874,7 +1320,7 @@
     </section>
 
     <footer class="foot"><div class="wrap"><div class="in">
-      <small>PHASE 1 // 建置與實作 // BUILD + HANDS-ON</small>
+      <small>PHASE 1 // Design Workflow // BUILD + HANDS-ON</small>
       <div class="pager"><a onclick="go('principle')">← 建置原理</a><a onclick="go('home')">回總覽 →</a></div>
     </div></div></footer>
   </div>
