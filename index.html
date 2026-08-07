@@ -135,7 +135,7 @@
   section{padding:64px 0}
   .rule{height:1px;background:var(--line);margin:0}
   .lbl{
-    font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.14em;
+    font-family:"Space Mono",monospace;font: size 16px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--ink-faint);margin-bottom:34px;
   }
   h2.big{font-family:"Fraunces","Noto Serif TC",serif;font-weight:400;font-size:clamp(30px,5vw,54px);line-height:1.12;letter-spacing:-.02em}
@@ -511,11 +511,11 @@
     <div class="rule" style="margin:40px 0 22px"></div>
     <div class="lbl" style="color:var(--ink);font-size:18px;letter-spacing:.18em;margin-bottom:18px">UED New Workflow</div>
     <div class="pipe" style="margin-top:0;grid-template-columns:1fr auto 1fr">
-      <div class="st g"><div class="t">Phase 1 · 建置與實作</div><div class="n">建立基礎並跑完一次流程</div><div class="d">整理元件規格、Main Guideline、Notion 資料庫與三個 Agent，接著用真實任務跑完 Design → Evaluation → Fix → 再檢核</div></div>
+      <div class="st g"><div class="t">Phase 1 · 建置與實作</div><div class="n">建立基礎並跑完一次流程</div><div class="d">整理元件規格、Guideline、Notion 資料庫與三個 Agent，接著用真實任務跑完三階段模型 Design → Evaluation → Fix 後，再進行修正。</div></div>
       <div class="ar">→</div>
-      <div class="st" style="border-top:2px solid var(--accent)"><div class="t">Phase 2 · Planning</div><div class="n" style="color:var(--accent)">In the planning stages</div><div class="d">下一階段的規劃正在進行中</div></div>
+      <div class="st" style="border-top:2px solid var(--accent)"><div class="t">Phase 2 · Planning</div><div class="n" style="color:var(--accent)">In the planning stages</div><div class="d">下一階段的規劃正在進行中✨</div></div>
     </div>
-    <div class="loopnote">先完成規範與 Agent 設定，再在同一階段內跑完一次完整實作。實作卡住時，回頭修正文件、資料庫或 Agent 指令，而不是只手動修畫面。</div>
+    <div class="loopnote">#大膽下筆，小心修改</div>
   </div>
 
   <section>
@@ -568,22 +568,22 @@
         <div class="prins">
           <div class="prin"><div class="pn serif">01</div><div>
             <h3>檢查者，要跟生成者隔離</h3>
-            <p>Evaluation Agent 絕對不能看到 Design Agent 是「怎麼想的」。如果它讀得到生成時的推理過程，它會順著那套邏輯點頭 —— 生成者說「這裡留白是刻意的」，檢查者就會同意，於是審查失去意義。</p>
-            <div class="note">把兩個 Agent 拆成獨立的 Skill / 對話，別讓它們共用同一段上下文。檢查者的輸入只餵兩樣：Design 的產出結果與 Notion 上的規範 —— 生成時的推理過程一律不傳進去。</div>
+            <p>Evaluation Agent 建議不讓他看到 Design Agent 的生成脈絡，如果它讀得到生成時的推理過程，它會順著那套邏輯點頭。例如生成者說「這裡留白是刻意的」，檢查者就會同意，於是審查失去意義。</p>
+            <div class="note">把兩個 Agent 拆成獨立的 Skill / 對話，別讓它們共用同一段上下文。檢查者的輸入只餵 Design 的產出結果與 Notion 上的規範就好。</div>
           </div></div>
           <div class="prin"><div class="pn serif">02</div><div>
             <h3>迴圈要有上限，跑不過就轉人工</h3>
             <p>Evaluation → Fix → 再 Evaluation 是一個迴圈。沒有上限，它可能無限地修下去。重試上限的意義不是「湊到幾輪」，而是「什麼時候該讓人接手」。</p>
-            <div class="note">在迴圈裡設一個計數上限（預設 3 輪）當停損；另外加一條收斂判斷：連續兩輪問題數沒下降就提前停。任一條件觸發，就把最後一份問題報告交給設計師人工處理，而不是讓 Agent 繼續繞。上限管的是交棒時機，不是完美程度。</div>
+            <div class="note">可以在迴圈裡設一個計數上限（例如 5-10 輪），另外加一條收斂判斷如：連續兩輪問題數沒下降就提前停。若已經確定 Loop 已經抵達極限，就把最後一份問題報告交給設計師人工處理，而不是讓 Agent 繼續空轉。</div>
           </div></div>
           <div class="prin"><div class="pn serif">03</div><div>
             <h3>哪些要跟 UED 一致，哪些可以自己決定</h3>
-            <p>三個 Agent 大部分的實作細節都可以彈性 —— 用哪個工具、prompt 怎麼寫、Design System 內容、複雜頁面跑幾輪，都由你自己決定。但規範放 Notion 必須統一。</p>
-            <div class="note">Notion 上資料的擺放方式（資料庫結構）要跟團隊一致 —— 因為三個 Agent 都讀同一份，擺法不一致，agent 就抓不到。</div>
+            <p>三個 Agent 大部分的實作細節都可以彈性設置，例如用哪個工具、prompt 怎麼寫、Design System 內容、複雜頁面跑幾輪，你都可以自己決定。但規範必須放在 Notion 。</p>
+            <div class="note">Notion 上資料的擺放方式建議跟團隊一致，這樣未來技術更新的時候，workflow 的整合會更順暢。</div>
           </div></div>
           <div class="prin"><div class="pn serif">04</div><div>
             <h3>三個 Agent 共通的一件事</h3>
-            <p>三份報告的欄位規格要能對接 —— 至少 component ID、rule ID、狀態要一致。Design 輸出「用了哪些元件」、Evaluation 輸出「逐條 pass/fail」、Fix 輸出「改了什麼」。用同一套 ID 系統，orchestration 才串得起來。這件事在每個 Agent 的「設定報告輸出方式」那一步都要遵守。</p>
+            <p>三個 Agent 都需要遵循相同的 Notion 資料庫、資料格式和輸出規範，以確保資訊能夠順利傳遞和整合。</p>
           </div></div>
         </div>
       </div>
@@ -603,7 +603,7 @@
       <div class="code mono">PHASE 1 / BUILD &amp; HANDS-ON</div>
       <h2>Phase 1</h2>
       <h1>建置與實作</h1>
-      <p class="role">先從 Figma Library 抽出元件規格，整理成 MD／JSON 與 Main Guideline，再放進 Notion，完成 Design、Evaluation、Fix 三個 Agent 的設定；接著選一個真實任務，在同一階段內跑完一次完整實作。建置與實作合併在這一頁，一次把基礎建起來、也把流程跑通。</p>
+      <p class="role">先從各產品的 Figma Library 中整理出每個元件的規格，匯出成 MD、JSON 兩種檔案，並建立屬於自己產品的 Main Guideline。然後把這些資料放進 Notion，完成三個 Agent 的設定，再選一個真實任務，跑完一次完整實作。</p>
       <div class="stations">
         <a class="hg" onclick="document.getElementById('build').scrollIntoView({behavior:'smooth'})" style="cursor:pointer">建置</a><a onclick="document.getElementById('handson').scrollIntoView({behavior:'smooth'})" style="cursor:pointer">實作</a>
       </div>
@@ -616,13 +616,13 @@
       </div>
 
       <div class="lbl" style="margin-top:20px">建置步驟</div>
-      <p class="measure" style="margin-bottom:10px">依序完成文件庫移轉、Component 規格產出、MD／JSON 整理與人工檢查，最後把確認完成的內容更新到 Notion。完成建置後，接著往下進入實作。</p>
+      
 
       <div class="flow">
 
         <div class="fstep"><div class="sn">01</div><div>
           <h3>建立自己組別的 AI Skills 文件庫</h3>
-          <p>不要從零建立資料庫。先複製共用範本，再依頁面下方的「移轉給其他組別時需修改清單」逐項調整，最後確認 Agent 已完全改讀自己組別的來源。</p>
+          <p>我們已建立好 Notion 資料庫的範本。大家可以直接複製，再依頁面下方的「移轉給其他組別時需修改清單」逐項調整，最後確認 Agent 已完全改讀自己組別的來源。</p>
           <div class="guideline-cards" aria-label="AI Skills 文件庫移轉三步驟">
             <article class="guideline-card">
               <div class="gc-top"><span class="gc-no">01</span><span class="gc-tag">Duplicate</span></div>
@@ -663,11 +663,11 @@
 
         <div class="fstep"><div class="sn">02</div><div>
           <h3>用 Figma Agent 產生 Component 規格</h3>
-          <p>先從正式 Figma Library 讀取元件，把畫面上的設定轉成可以檢查與整理的規格文件。這一步建立的是後續所有 Agent 共用的事實來源。</p>
+          <p>先從正式 Figma Library 讀取元件，可以直接套用已經建立好的 Skill 把畫面上的設定轉成可以檢查與整理的規格文件。</p>
           
 <div class="step1-cols">
 <ul class="clean">
-<li>選取 Library 中的任一元件</li>
+<li>選取 Library 中的任一元件的 Frame</li>
 <li>在 Figma Agents 對話框輸入「建立文件」</li>
 <li>檢查 Figma Agents 產出的文件（對照下方檢查表）</li>
 </ul>
@@ -693,8 +693,8 @@
         </div></div>
 
         <div class="fstep"><div class="sn">03</div><div>
-          <h3>用 Skill 產出 Component 的 MD／JSON 檔案</h3>
-          <p>把 Figma Agent 產出的元件文件交給轉檔 Skill，同時產出兩種格式：</p>
+          <h3>利用 Skill 產出產品元件的 MD 及 JSON 檔案</h3>
+          <p>套用以下文件建立 Skill，並建立產品元件的 MD 及 Json 檔案。接著把 Figma Agent 產出的元件文件交給轉檔 Skill，同時產出兩種格式：</p>
           <ul class="clean">
             <li><strong>MD：</strong>提供設計師與 Design Agent 閱讀，說明元件用途、使用時機與限制。</li>
             <li><strong>JSON：</strong>提供 Evaluation 與 Fix Agent 讀取，保存 Variant、Property、Binding、尺寸與間距等可程式檢查的資料。</li>
@@ -715,9 +715,9 @@
 
         <div class="fstep"><div class="sn">04</div><div>
           <h3>人工檢查 MD／JSON 是否正確</h3>
-          <p>AI 抽出的規格不能直接視為正確。由熟悉元件的設計師逐項核對 Figma Library、MD 與 JSON，確認名稱、狀態、數值、樣式綁定與禁用規則一致。</p>
+          <p>AI 抽出的規格一定有一些小錯誤。由熟悉元件的設計師逐項核對 Figma Library、MD 與 JSON，確認名稱、狀態、數值、樣式綁定與禁用規則一致。</p>
           <ul class="clean">
-            <li>缺少的規格標示 <span class="mono">undefined</span>，不要自行補答案。</li>
+            <li>缺少的規格標示可進行表示，例如 <span class="mono">undefined</span>，千萬別讓 Agent 自行猜測答案。</li>
             <li>MD 與 JSON 內容矛盾時先修正文件，再進入下一步。</li>
             <li>確認 Agent 能依 Component ID 找到同一個元件。</li>
           </ul>
@@ -728,7 +728,6 @@
           <h3>把內容放上 Notion</h3>
           <p>將完成並通過人工檢查的內容放進組別的 AI Skills 文件庫，讓 Agent 可以從固定位置找到最新版本。</p>
           <ul class="clean">
-            <li>Component 的 MD／JSON 以及 UX Writing 原則。</li>
             <li>檢查每個頁面的名稱、狀態、用途說明與版本是否正確。</li>
             <li>確認 Main Guideline 中的連結可以導向實際文件。</li>
           </ul>
@@ -741,7 +740,7 @@
       <div class="rule" style="margin:8px 0 34px"></div>
       <div class="code mono" style="color:var(--accent)">PHASE 1 · 實作 / HANDS-ON</div>
       <h2 class="big" style="margin:8px 0 14px">實作：跑一次完整流程</h2>
-      <p class="role" style="margin-bottom:0">建置完成後，接著用一個範圍小、可以控制的真實需求，跑完 Design、Evaluation、Fix 與重新檢核。這一段不是要證明 Agent 一次就能做到完美，而是要找出流程、文件與權限哪裡還不完整。</p>
+      <p class="role" style="margin-bottom:0">建置完成後，可嘗試用一個需求，跑完 Design、Evaluation、Fix 與重新檢核這個流程。利用這段實作找出流程、文件與權限哪裡還不完整。</p>
       <div class="io">
         <div><div class="k">Input · 輸入</div><div class="v">一個範圍明確的<code>真實需求</code>、指定的 Figma 位置，以及已完成的 Notion 規範與三個 Agent</div></div>
         <div><div class="k">Output · 輸出</div><div class="v">一輪完整的 Agent 執行紀錄、設計／檢核／修正報告，以及需要回頭調整的<code>待辦清單</code></div></div>
@@ -753,7 +752,7 @@
       <div class="flow">
         <div class="fstep"><div class="sn">01</div><div>
           <h3>選一個適合測試的真實需求</h3>
-          <p>選擇範圍小、目的明確，而且主要使用正式元件的需求。第一次不要選跨多頁、業務規則複雜或資料尚未確認的任務。</p>
+          <p>選擇範圍小、目的明確，而且主要使用正式元件的需求。建議不要選跨多頁、業務規則複雜或資料尚未確認的任務。</p>
           <ul class="clean">
             <li>建議先從單一頁面或單一流程開始。</li>
             <li>資料可以使用明確標示的測試內容。</li>
@@ -846,7 +845,7 @@
 
         <div class="fstep"><div class="sn">07</div><div>
           <h3>整理卡點，回頭修正基礎資料</h3>
-          <p>實作中遇到的問題，不一定是 Agent 能力不足。先判斷卡點來自哪一層，再修正對應來源：</p>
+          <p>實作中遇到的問題，可以通過修正 MD/Json 檔案來解決。先判斷卡點來自那個流程，再修正對應來源：</p>
           <div class="ctable-wrap" style="margin-top:24px">
             <table class="ctable">
               <thead><tr><th>卡點</th><th>優先修正位置</th></tr></thead>
